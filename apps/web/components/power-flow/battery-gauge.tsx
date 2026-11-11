@@ -28,10 +28,10 @@ export function BatteryGauge({ percent, charging }: { percent: number; charging:
         />
       </svg>
       <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-        <BatteryIcon className={`h-[7cqw] w-[7cqw] ${fill}`} />
-        <p className="mt-1 text-[length:11cqw] leading-none font-semibold tracking-tight tabular-nums text-zinc-900 dark:text-zinc-50">
+        <BatteryIcon className={`h-[6cqw] w-[6cqw] ${fill}`} />
+        <p className="mt-1 text-[length:6.5cqw] leading-none font-semibold tracking-tight tabular-nums text-zinc-900 dark:text-zinc-50">
           {level}
-          <span className="ml-0.5 text-[length:4.5cqw] font-medium">%</span>
+          <span className="ml-0.5 text-[length:2.6cqw] font-medium">%</span>
         </p>
       </div>
     </>

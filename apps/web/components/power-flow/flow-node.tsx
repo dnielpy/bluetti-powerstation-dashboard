@@ -8,18 +8,18 @@ export function FlowNode({ node }: { node: FlowNodeData }) {
   return (
     <>
       <div
-        className={`absolute flex h-[17%] w-[17%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white ring-8 transition-colors ${position.node} ${
+        className={`absolute flex h-[max(13%,52px)] w-[max(13%,52px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white ring-8 transition-colors ${position.node} ${
           active ? `${styles.circle} ${styles.halo}` : "bg-zinc-400 ring-zinc-300/40 dark:bg-zinc-600 dark:ring-zinc-700/40"
         }`}
       >
         <node.Icon className="h-1/2 w-1/2" />
       </div>
       <div className={`absolute flex -translate-y-1/2 flex-col ${position.text}`}>
-        <p className="text-[length:6.8cqw] leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+        <p className="text-[length:max(16px,3.8cqw)] leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
           {node.watts}
-          <span className="ml-0.5 text-[length:4cqw] font-medium">W</span>
+          <span className="ml-0.5 text-[length:max(11px,2.3cqw)] font-medium">W</span>
         </p>
-        <p className="text-[length:max(12px,3.2cqw)] text-zinc-600 dark:text-zinc-400">{node.label}</p>
+        <p className="text-[length:max(12px,2.6cqw)] text-zinc-600 dark:text-zinc-400">{node.label}</p>
       </div>
     </>
   );

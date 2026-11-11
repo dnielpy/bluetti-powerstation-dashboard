@@ -6,7 +6,7 @@ export function FlowLine({ node }: { node: FlowNodeData }) {
       <path
         d={node.path}
         fill="none"
-        strokeWidth={10}
+        strokeWidth={14}
         strokeLinecap="round"
         className="stroke-white dark:stroke-zinc-800"
       />
@@ -14,9 +14,9 @@ export function FlowLine({ node }: { node: FlowNodeData }) {
         <path
           d={node.path}
           fill="none"
-          strokeWidth={4}
+          strokeWidth={5}
           strokeLinecap="round"
-          strokeDasharray="14 26"
+          strokeDasharray="16 28"
           className={`flow-line ${node.direction === "out" ? "flow-line-out" : ""} ${ACTIVE_STYLES[node.direction].stroke}`}
         />
       )}

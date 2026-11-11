@@ -8,7 +8,7 @@ export function PowerFlow({ summary }: { summary: Summary }) {
   const nodes = buildFlowNodes(summary);
 
   return (
-    <section aria-label="Power flow" className="@container relative aspect-square w-full max-w-[440px]">
+    <section aria-label="Power flow" className="@container relative aspect-square w-[min(100%,620px,calc(100dvh-10rem))]">
       <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full" aria-hidden>
         {nodes.map((node) => (
           <FlowLine key={node.label} node={node} />

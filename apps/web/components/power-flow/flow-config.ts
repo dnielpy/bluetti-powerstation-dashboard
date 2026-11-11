@@ -25,10 +25,10 @@ export const ACTIVE_STYLES: Record<Direction, { circle: string; halo: string; st
 };
 
 export const CORNER_POSITION: Record<Corner, { node: string; text: string }> = {
-  "top-left": { node: "left-[15%] top-[15%]", text: "left-[27%] top-[15%] items-start" },
-  "top-right": { node: "left-[85%] top-[15%]", text: "right-[27%] top-[15%] items-end" },
-  "bottom-left": { node: "left-[15%] top-[85%]", text: "left-[27%] top-[85%] items-start" },
-  "bottom-right": { node: "left-[85%] top-[85%]", text: "right-[27%] top-[85%] items-end" },
+  "top-left": { node: "left-[15%] top-[15%]", text: "left-[24%] top-[15%] items-start" },
+  "top-right": { node: "left-[85%] top-[15%]", text: "right-[24%] top-[15%] items-end" },
+  "bottom-left": { node: "left-[15%] top-[85%]", text: "left-[24%] top-[85%] items-start" },
+  "bottom-right": { node: "left-[85%] top-[85%]", text: "right-[24%] top-[85%] items-end" },
 };
 
 export function buildFlowNodes(summary: Summary): FlowNodeData[] {
