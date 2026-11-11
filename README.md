@@ -80,6 +80,8 @@ Edit `.env.production`: set a strong `POSTGRES_PASSWORD`, your `BLUETTI_NAME`, `
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 
+To update a running deployment later, run `./scripts/update.sh`: it stops the containers, runs `git pull` and builds and starts them again, waiting until they are healthy. The database volume is kept.
+
 - Web: http://HOST:3000 · API: http://HOST:3001 (ports set by `WEB_PORT` / `API_PORT`)
 - Postgres is not published outside the Docker network.
 - Dates rendered by the web server use `TZ` (default `America/Havana`); set it to your timezone.
