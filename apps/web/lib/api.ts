@@ -1,3 +1,5 @@
+import { connection } from "next/server";
+
 export type Summary = {
   id: number;
   date: string;
@@ -38,4 +40,31 @@ export async function getLatestSummary(): Promise<Summary | null> {
 
   const page: SummaryPage = await response.json();
   return page.items[0] ?? null;
+}
+
+export type BatteryStatusPoint = {
+  date: string;
+  battery_percent: number;
+};
+
+export type BatteryStatus = {
+  readings: BatteryStatusPoint[];
+  fetchedAt: number;
+};
+
+export async function getBatteryStatus(hours: number): Promise<BatteryStatus> {
+  await connection();
+  const fetchedAt = Date.now();
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(`/battery-status?hours=${hours}`));
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return { readings: await response.json(), fetchedAt };
 }
