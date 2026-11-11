@@ -27,6 +27,21 @@ cp .env.example .env
 | `BLUETTI_NAME` | Nombre Bluetooth de la Bluetti. De aquí se saca el modelo y se usa para encontrarla. |
 | `BLUETTI_ENCRYPTED` | `true` si tu modelo usa conexión cifrada (por defecto `false`). |
 
+## Base de datos
+
+Postgres corre en Docker. Los datos de conexión están en `.env` (`POSTGRES_*` y `DATABASE_URL`).
+
+```bash
+docker compose up -d            # levanta Postgres
+uv run alembic upgrade head     # aplica las migraciones
+```
+
+Para crear una migración después de agregar o cambiar modelos:
+
+```bash
+uv run alembic revision --autogenerate -m "descripcion"
+```
+
 ## Ejecutar
 
 ```bash
@@ -34,6 +49,7 @@ uv run uvicorn app.main:app --reload
 ```
 
 - Health check: http://localhost:8000/health
+- Health check de la base de datos: http://localhost:8000/health/db
 - Batería: http://localhost:8000/battery → `{"battery_percent": 92, "model": "AC180"}`
 - Potencia (W) → `{"power": 120, "unit": "W", "model": "AC180"}`:
   - http://localhost:8000/ac-output: consumo en las salidas AC

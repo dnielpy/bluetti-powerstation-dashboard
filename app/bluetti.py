@@ -15,11 +15,11 @@ from bluetti_bt_lib.registers import ReadableRegisters
 
 
 class BluettiConfigError(Exception):
-    """La configuración necesaria para conectarse no está definida o es inválida."""
+    pass
 
 
 class BluettiUnavailableError(Exception):
-    """No se pudo leer de la Bluetti por Bluetooth."""
+    pass
 
 
 @dataclass
@@ -29,7 +29,6 @@ class Reading:
     model: str
 
 
-# Dirección Bluetooth encontrada a partir del nombre, se busca una sola vez por proceso
 _address: str | None = None
 
 
