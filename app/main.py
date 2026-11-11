@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from app import db
-from app.routers import battery, data, health, power
+from app.routers import battery, data, health, power, update
 
 load_dotenv()
 
@@ -22,3 +22,4 @@ app.include_router(health.router)
 app.include_router(battery.router)
 app.include_router(power.router)
 app.include_router(data.router)
+app.include_router(update.router)

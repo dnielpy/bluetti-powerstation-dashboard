@@ -1,5 +1,6 @@
 import asyncio
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from bleak import BleakScanner
@@ -62,14 +63,15 @@ async def _get_address(name: str) -> str:
     return _address
 
 
-async def read_field(field: FieldName) -> Reading:
+async def read_fields(fields: Sequence[FieldName]) -> dict[FieldName, Reading]:
     name = _get_name()
     device = _build_device(name)
     model = type(device).__name__
 
-    device_field = next((f for f in device.fields if f.name == field.value), None)
-    if device_field is None:
-        raise BluettiConfigError(f"Model {model} does not expose {field.value}")
+    device_fields = {f.name: f for f in device.fields}
+    missing = [field.value for field in fields if field.value not in device_fields]
+    if missing:
+        raise BluettiConfigError(f"Model {model} does not expose {', '.join(missing)}")
 
     address = await _get_address(name)
 
@@ -79,12 +81,22 @@ async def read_field(field: FieldName) -> Reading:
         asyncio.Future,
         DeviceReaderConfig(use_encryption=_use_encryption()),
     )
-    data = await reader.read(
-        only_registers=[ReadableRegisters(device_field.address, device_field.size)]
-    )
+    registers = [
+        ReadableRegisters(device_fields[field.value].address, device_fields[field.value].size)
+        for field in fields
+    ]
+    data = await reader.read(only_registers=registers) or {}
 
-    value = None if data is None else data.get(field.value)
-    if value is None:
-        raise BluettiUnavailableError(f"Could not read {field.value}")
+    unread = [field.value for field in fields if data.get(field.value) is None]
+    if unread:
+        raise BluettiUnavailableError(f"Could not read {', '.join(unread)}")
 
-    return Reading(value=value, unit=get_unit(field), model=model)
+    return {
+        field: Reading(value=data[field.value], unit=get_unit(field), model=model)
+        for field in fields
+    }
+
+
+async def read_field(field: FieldName) -> Reading:
+    readings = await read_fields([field])
+    return readings[field]

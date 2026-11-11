@@ -1,9 +1,19 @@
 from collections.abc import Sequence
 
+from bluetti_bt_lib import FieldName
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import bluetti, repository
 from app.models import Summary
+
+SUMMARY_FIELDS = [
+    FieldName.BATTERY_SOC,
+    FieldName.AC_OUTPUT_POWER,
+    FieldName.AC_INPUT_POWER,
+    FieldName.DC_OUTPUT_POWER,
+    FieldName.DC_INPUT_POWER,
+]
 
 
 def _apply_filters(query: Select, ac: bool | None, dc: bool | None) -> Select:
@@ -33,3 +43,22 @@ async def list_summaries(
     total = await session.scalar(total_query) or 0
 
     return items, total
+
+
+def build_summary(readings: dict[FieldName, bluetti.Reading]) -> Summary:
+    ac_input = int(readings[FieldName.AC_INPUT_POWER].value)
+    dc_input = int(readings[FieldName.DC_INPUT_POWER].value)
+    return Summary(
+        battery_percent=int(readings[FieldName.BATTERY_SOC].value),
+        ac_output=int(readings[FieldName.AC_OUTPUT_POWER].value),
+        ac_input=ac_input,
+        dc_output=int(readings[FieldName.DC_OUTPUT_POWER].value),
+        dc_input=dc_input,
+        ac=ac_input > 0,
+        dc=dc_input > 0,
+    )
+
+
+async def collect_summary(session: AsyncSession) -> Summary:
+    readings = await bluetti.read_fields(SUMMARY_FIELDS)
+    return await repository.save(session, build_summary(readings))

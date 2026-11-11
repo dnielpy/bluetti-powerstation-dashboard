@@ -61,6 +61,7 @@ uv run uvicorn app.main:app --reload
   - `page_size`: how many records to return (default `10`, max `100`)
   - `offset`: how many records to skip (default `0`)
   - `ac` / `dc`: `true` or `false` to filter by whether AC/DC input was active
+- Update: `POST http://localhost:8000/update` → reads battery and AC/DC power from the Bluetti in one connection, stores a new `summary` row and returns it. `ac`/`dc` are `true` when the AC/DC input power is above 0.
 - Docs: http://localhost:8000/docs
 
 Notes:
