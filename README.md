@@ -60,3 +60,36 @@ pnpm dev
 | `pnpm db:up` | Start Postgres |
 | `pnpm db:down` | Stop Postgres |
 | `pnpm db:migrate` | Apply database migrations |
+
+## Production (Docker)
+
+Production runs the API, the web app and Postgres with `docker-compose.prod.yml`. It targets a **Linux host with Bluetooth** (for example a Raspberry Pi) close to the Bluetti: the API container talks to the host's BlueZ daemon through its D-Bus socket. Docker Desktop on macOS cannot reach the Mac's Bluetooth, so the API can't read the Bluetti there.
+
+On the host:
+
+```bash
+sudo apt install bluez
+cp .env.production.example .env.production
+getent group bluetooth | cut -d: -f3
+```
+
+Edit `.env.production`: set a strong `POSTGRES_PASSWORD`, your `BLUETTI_NAME`, and `BLUETOOTH_GID` to the number printed above. Then:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+```
+
+- Web: http://HOST:3000 · API: http://HOST:3001 (ports set by `WEB_PORT` / `API_PORT`)
+- Postgres is not published outside the Docker network.
+- The API applies migrations on startup and runs with a single worker, so the summary job runs once.
+- Containers restart automatically, have health checks and rotate their logs (3 × 10 MB).
+- Build the images on the host itself (or with `docker buildx --platform linux/arm64` for a Raspberry Pi).
+
+### Slow or unstable connections
+
+Dependency downloads retry instead of failing on a dropped connection:
+
+- **pnpm** (locally and in the web image): settings in `pnpm-workspace.yaml` — 8 retries with backoff from 20 s up to 3 min, a 5 min request timeout and at most 4 parallel downloads.
+- **uv** (API image): `UV_HTTP_RETRIES=8`, `UV_HTTP_TIMEOUT=300` and 4 parallel downloads.
+- Both image builds keep their download cache between builds, so a build that fails halfway does not download everything again.
+

@@ -1,0 +1,61 @@
+name: bluetti-powerstation-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  api:
+    build:
+      context: apps/api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BLUETTI_NAME: ${BLUETTI_NAME:?Set BLUETTI_NAME}
+      BLUETTI_ENCRYPTED: ${BLUETTI_ENCRYPTED:-false}
+      SUMMARY_JOB_INTERVAL_SECONDS: ${SUMMARY_JOB_INTERVAL_SECONDS:-7}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    group_add:
+      - "${BLUETOOTH_GID:?Set BLUETOOTH_GID to the host bluetooth group id (getent group bluetooth)}"
+    volumes:
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+    ports:
+      - "${API_PORT:-3001}:3001"
+    logging: *logging
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_URL: http://api:3001
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    logging: *logging
+
+volumes:
+  postgres_data:
