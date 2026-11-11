@@ -37,6 +37,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     group_add:
       - "${BLUETOOTH_GID:?Set BLUETOOTH_GID to the host bluetooth group id (getent group bluetooth)}"
+    security_opt:
+      - apparmor=unconfined
     volumes:
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
     ports:
