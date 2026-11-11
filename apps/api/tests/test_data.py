@@ -183,3 +183,34 @@ def test_battery_status_invalid_hours(use_rows, query: str) -> None:
     response = client.get(f"/battery-status?{query}")
 
     assert response.status_code == 422
+
+
+def test_ac_output_history(use_rows, monkeypatch: pytest.MonkeyPatch) -> None:
+    use_rows({})
+    calls = []
+
+    async def fake_list_ac_output(session, since):
+        calls.append(since)
+        return [
+            Summary(date=datetime(2026, 11, 11, 12, 0, tzinfo=timezone.utc), ac_output=54),
+            Summary(date=datetime(2026, 11, 11, 12, 0, 7, tzinfo=timezone.utc), ac_output=61),
+        ]
+
+    monkeypatch.setattr(summaries, "list_ac_output", fake_list_ac_output)
+
+    before = datetime.now(timezone.utc)
+    response = client.get("/ac-output-history?hours=6")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"date": "2026-11-11T12:00:00Z", "ac_output": 54},
+        {"date": "2026-11-11T12:00:07Z", "ac_output": 61},
+    ]
+    assert abs((before - calls[0]).total_seconds() - 6 * 3600) < 5
+
+
+@pytest.mark.parametrize("query", ["hours=0", "hours=169"])
+def test_ac_output_history_invalid_hours(use_rows, query: str) -> None:
+    use_rows({})
+
+    assert client.get(f"/ac-output-history?{query}").status_code == 422

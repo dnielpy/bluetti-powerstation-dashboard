@@ -36,3 +36,10 @@ class BlackoutOut(BaseModel):
     end: datetime
     duration_hours: float
     ongoing: bool
+
+
+class AcOutputPoint(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    date: datetime
+    ac_output: int

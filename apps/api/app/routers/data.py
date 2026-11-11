@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import blackouts, summaries
 from app.db import get_session
 from app.models import Summary
-from app.schemas import BatteryStatusPoint, BlackoutOut, SummaryOut, SummaryPage
+from app.schemas import AcOutputPoint, BatteryStatusPoint, BlackoutOut, SummaryOut, SummaryPage
 
 router = APIRouter(tags=["data"])
 
@@ -78,3 +78,17 @@ async def list_blackouts(
         )
         for blackout in blackouts.find_blackouts((row.date, row.ac) for row in rows)
     ]
+
+
+@router.get(
+    "/ac-output-history",
+    response_model=list[AcOutputPoint],
+    description="AC output power (W) of every stored reading in the last `hours`, oldest first.",
+)
+async def ac_output_history(
+    hours: float = Query(24, gt=0, le=168, description="How many hours back to include."),
+    session: AsyncSession = Depends(get_session),
+) -> list[AcOutputPoint]:
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    rows = await summaries.list_ac_output(session, since)
+    return [AcOutputPoint.model_validate(row) for row in rows]
