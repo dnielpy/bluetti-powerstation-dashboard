@@ -39,8 +39,26 @@ body {
   animation-direction: reverse;
 }
 
+@keyframes comet-travel {
+  from {
+    stroke-dashoffset: var(--comet-start);
+  }
+  to {
+    stroke-dashoffset: var(--comet-end);
+  }
+}
+
+.comet {
+  stroke-dasharray: var(--comet-length) 2;
+  animation: comet-travel 12s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flow-line {
     animation: none;
+  }
+
+  .comet {
+    display: none;
   }
 }

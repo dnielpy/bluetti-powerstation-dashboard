@@ -1,15 +1,24 @@
 "use client";
 
-import { type KeyboardEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, type PointerEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
-import { type BatterySeries, pointTrends, type SeriesPoint, splitByTrend, splitOnGaps } from "@/lib/battery-series";
-import { TREND_COLORS, TREND_LABELS } from "@/lib/chart-colors";
+import {
+  type BatterySeries,
+  pointTrends,
+  type SeriesPoint,
+  splitByTrend,
+  splitOnGaps,
+  type Trend,
+} from "@/lib/battery-series";
+import { CometTrail } from "@/components/stats/comet-trail";
+import { PULSE_COLORS, TREND_COLORS, TREND_LABELS } from "@/lib/chart-colors";
 
 const HEIGHT = 420;
 const MARGIN = { top: 16, right: 48, bottom: 28, left: 44 };
 const Y_TICKS = [0, 25, 50, 75, 100];
 
 const HOUR_MS = 3_600_000;
+const PULSE_TRENDS: Trend[] = ["up", "down"];
 
 function tickStepMs(rangeMs: number): number {
   if (rangeMs <= HOUR_MS) return 10 * 60_000;
@@ -85,11 +94,13 @@ export function BatteryChart({ series }: { series: BatterySeries }) {
   const x = (t: number) => MARGIN.left + ((t - from) / rangeMs) * innerWidth;
   const y = (value: number) => MARGIN.top + (1 - value / 100) * innerHeight;
 
+  const clipId = useId();
   const trends = useMemo(() => pointTrends(points), [points]);
+  const segments = useMemo(() => splitOnGaps(points, gapMs), [points, gapMs]);
   const runs = useMemo(() => {
     const trendByPoint = new Map(points.map((point, index) => [point, trends[index]]));
-    return splitOnGaps(points, gapMs).flatMap((segment) => splitByTrend(segment, trendByPoint));
-  }, [points, trends, gapMs]);
+    return segments.flatMap((segment) => splitByTrend(segment, trendByPoint));
+  }, [points, trends, segments]);
   const last = points.at(-1);
   const lastColor = TREND_COLORS[trends.at(-1) ?? "up"];
   const active = activeIndex === null ? null : points[activeIndex];
@@ -180,6 +191,33 @@ export function BatteryChart({ series }: { series: BatterySeries }) {
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
+            />
+          ))}
+
+          <defs>
+            {PULSE_TRENDS.map((trend) => (
+              <clipPath key={trend} id={`${clipId}-${trend}`}>
+                {runs
+                  .filter((run) => run.trend === trend)
+                  .map((run, index) => (
+                    <rect
+                      key={index}
+                      x={x(run.points[0].t)}
+                      y={0}
+                      width={Math.max(1, x(run.points.at(-1)!.t) - x(run.points[0].t))}
+                      height={HEIGHT}
+                    />
+                  ))}
+              </clipPath>
+            ))}
+          </defs>
+          {PULSE_TRENDS.map((trend) => (
+            <CometTrail
+              key={`comet-${trend}`}
+              path={segments.map(linePath).join("")}
+              color={PULSE_COLORS[trend]}
+              glow={TREND_COLORS[trend]}
+              clipPath={`url(#${clipId}-${trend})`}
             />
           ))}
 
