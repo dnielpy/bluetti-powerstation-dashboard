@@ -43,3 +43,17 @@ class AcOutputPoint(BaseModel):
 
     date: datetime
     ac_output: int
+
+
+class PeriodOut(BaseModel):
+    start: datetime
+    end: datetime
+    duration_hours: float
+
+
+class PowerStatusOut(BaseModel):
+    receiving_ac: bool | None
+    current_since: datetime | None
+    last_with_power: datetime | None
+    last_blackout: PeriodOut | None
+    last_power_period: PeriodOut | None

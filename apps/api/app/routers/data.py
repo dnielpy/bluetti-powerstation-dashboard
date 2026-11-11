@@ -3,10 +3,18 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import blackouts, summaries
+from app import blackouts, power_status, summaries
 from app.db import get_session
 from app.models import Summary
-from app.schemas import AcOutputPoint, BatteryStatusPoint, BlackoutOut, SummaryOut, SummaryPage
+from app.schemas import (
+    AcOutputPoint,
+    BatteryStatusPoint,
+    BlackoutOut,
+    PeriodOut,
+    PowerStatusOut,
+    SummaryOut,
+    SummaryPage,
+)
 
 router = APIRouter(tags=["data"])
 
@@ -92,3 +100,29 @@ async def ac_output_history(
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
     rows = await summaries.list_ac_output(session, since)
     return [AcOutputPoint.model_validate(row) for row in rows]
+
+
+def _period_out(period: power_status.Period | None) -> PeriodOut | None:
+    if period is None:
+        return None
+    return PeriodOut(start=period.start, end=period.end, duration_hours=period.duration_hours)
+
+
+@router.get(
+    "/power-status",
+    response_model=PowerStatusOut,
+    description=(
+        "Whether the Bluetti is receiving AC power according to the latest reading, since when it is in that state, "
+        "the last reading with AC power, the last finished blackout (while powered) and the last period with power "
+        "(during a blackout)."
+    ),
+)
+async def get_power_status(session: AsyncSession = Depends(get_session)) -> PowerStatusOut:
+    status = await power_status.get_power_status(session)
+    return PowerStatusOut(
+        receiving_ac=status.receiving_ac,
+        current_since=status.current_since,
+        last_with_power=status.last_with_power,
+        last_blackout=_period_out(status.last_blackout),
+        last_power_period=_period_out(status.last_power_period),
+    )
