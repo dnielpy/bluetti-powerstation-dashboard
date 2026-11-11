@@ -1,12 +1,12 @@
 import { BatteryChart } from "@/components/stats/battery-chart";
-import { BatteryTable } from "@/components/stats/battery-table";
+import { AverageTable } from "@/components/stats/average-table";
 import { ChartCard } from "@/components/stats/chart-card";
 import { RangeFilter } from "@/components/stats/range-filter";
 import { TrendLegend } from "@/components/stats/trend-legend";
 import { StatusMessage } from "@/components/status-message";
 import { ApiUnavailableError, type BatteryStatus, getBatteryStatus } from "@/lib/api";
-import { buildBatterySeries, buildBatteryTableRows } from "@/lib/battery-series";
 import { BATTERY_RANGES, parseTimeRange } from "@/lib/time-ranges";
+import { buildAverageRows, buildTimeSeries } from "@/lib/time-series";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -25,7 +25,8 @@ export async function BatteryStats({ searchParams }: { searchParams: SearchParam
   }
 
   const { readings, fetchedAt } = status;
-  const series = buildBatterySeries(readings, range.hours, fetchedAt);
+  const samples = readings.map((reading) => ({ date: reading.date, value: reading.battery_percent }));
+  const series = buildTimeSeries(samples, range.hours, fetchedAt);
 
   return (
     <ChartCard
@@ -52,7 +53,7 @@ export async function BatteryStats({ searchParams }: { searchParams: SearchParam
             <TrendLegend />
           </div>
           <BatteryChart series={series} />
-          <BatteryTable rows={buildBatteryTableRows(readings, range.hours, fetchedAt)} />
+          <AverageTable rows={buildAverageRows(samples, range.hours, fetchedAt)} valueLabel="Average battery" unit="%" />
         </>
       )}
     </ChartCard>

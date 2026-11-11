@@ -8,6 +8,7 @@ const SEVEN_DAYS: TimeRange = { hours: 168, label: "7d", description: "Last 7 da
 
 export const BATTERY_RANGES: TimeRange[] = [ONE_HOUR, SIX_HOURS, ONE_DAY, SEVEN_DAYS];
 export const BLACKOUT_RANGES: TimeRange[] = [TWELVE_HOURS, ONE_DAY, SEVEN_DAYS];
+export const AC_OUTPUT_RANGES: TimeRange[] = [ONE_HOUR, SIX_HOURS, ONE_DAY];
 
 export const DEFAULT_TIME_RANGE = ONE_DAY;
 

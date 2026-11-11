@@ -2,78 +2,18 @@
 
 import { type KeyboardEvent, type PointerEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
-import {
-  type BatterySeries,
-  pointTrends,
-  type SeriesPoint,
-  splitByTrend,
-  splitOnGaps,
-  type Trend,
-} from "@/lib/battery-series";
 import { CometTrail } from "@/components/stats/comet-trail";
+import { pointTrends, splitByTrend, type Trend } from "@/lib/battery-series";
 import { PULSE_COLORS, TREND_COLORS, TREND_LABELS } from "@/lib/chart-colors";
+import { formatTimeTick, formatTooltipTime, nearestIndex, timeTicks } from "@/lib/chart-time";
+import { type SeriesPoint, splitOnGaps, type TimeSeries } from "@/lib/time-series";
 
 const HEIGHT = 420;
 const MARGIN = { top: 16, right: 48, bottom: 28, left: 44 };
 const Y_TICKS = [0, 25, 50, 75, 100];
-
-const HOUR_MS = 3_600_000;
 const PULSE_TRENDS: Trend[] = ["up", "down"];
 
-function tickStepMs(rangeMs: number): number {
-  if (rangeMs <= HOUR_MS) return 10 * 60_000;
-  if (rangeMs <= 6 * HOUR_MS) return HOUR_MS;
-  if (rangeMs <= 24 * HOUR_MS) return 4 * HOUR_MS;
-  return 24 * HOUR_MS;
-}
-
-const MIN_TICK_SPACING = 56;
-
-function xTicks(from: number, to: number, innerWidth: number): number[] {
-  const step = tickStepMs(to - from);
-  const start = new Date(from);
-  if (step >= 24 * HOUR_MS) start.setHours(0, 0, 0, 0);
-  else if (step >= HOUR_MS) start.setMinutes(0, 0, 0);
-  else start.setMinutes(Math.floor(start.getMinutes() / 10) * 10, 0, 0);
-
-  const ticks: number[] = [];
-  for (let t = start.getTime(); t <= to; t += step) {
-    if (t >= from) ticks.push(t);
-  }
-  const spacing = (innerWidth * step) / (to - from);
-  const every = Math.max(1, Math.ceil(MIN_TICK_SPACING / Math.max(spacing, 1)));
-  return ticks.filter((_, index) => index % every === 0);
-}
-
-function formatTick(t: number, rangeMs: number): string {
-  const options: Intl.DateTimeFormatOptions =
-    rangeMs > 24 * HOUR_MS ? { day: "numeric", month: "short" } : { hour: "2-digit", minute: "2-digit", hour12: false };
-  return new Intl.DateTimeFormat(undefined, options).format(t);
-}
-
-function formatTooltipTime(t: number): string {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(t);
-}
-
-function nearestIndex(points: SeriesPoint[], t: number): number {
-  let lo = 0;
-  let hi = points.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (points[mid].t < t) lo = mid + 1;
-    else hi = mid;
-  }
-  if (lo > 0 && Math.abs(points[lo - 1].t - t) < Math.abs(points[lo].t - t)) return lo - 1;
-  return lo;
-}
-
-export function BatteryChart({ series }: { series: BatterySeries }) {
+export function BatteryChart({ series }: { series: TimeSeries }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -167,7 +107,7 @@ export function BatteryChart({ series }: { series: BatterySeries }) {
             </g>
           ))}
 
-          {xTicks(from, to, innerWidth).map((tick) => (
+          {timeTicks(from, to, innerWidth).map((tick) => (
             <text
               key={tick}
               x={x(tick)}
@@ -175,7 +115,7 @@ export function BatteryChart({ series }: { series: BatterySeries }) {
               textAnchor="middle"
               className="fill-zinc-500 text-[11px] tabular-nums dark:fill-zinc-400"
             >
-              {formatTick(tick, rangeMs)}
+              {formatTimeTick(tick, rangeMs)}
             </text>
           ))}
 

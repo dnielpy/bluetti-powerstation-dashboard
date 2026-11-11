@@ -5,6 +5,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { BatteryStats } from "@/components/stats/battery-stats";
 import { BlackoutStats } from "@/components/stats/blackout-stats";
 import { ChartCardSkeleton } from "@/components/stats/chart-card-skeleton";
+import { PowerStats } from "@/components/stats/power-stats";
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -21,6 +22,9 @@ export default function StatsPage({ searchParams }: PageProps<"/stats">) {
       </Suspense>
       <Suspense fallback={<ChartCardSkeleton height={220} />}>
         <BlackoutStats searchParams={searchParams} />
+      </Suspense>
+      <Suspense fallback={<ChartCardSkeleton height={460} />}>
+        <PowerStats searchParams={searchParams} />
       </Suspense>
       <AutoRefresh intervalMs={REFRESH_INTERVAL_MS} />
     </main>

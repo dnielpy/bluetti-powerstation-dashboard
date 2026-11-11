@@ -90,3 +90,30 @@ export async function getBlackouts(hours: number): Promise<Blackout[]> {
 
   return response.json();
 }
+
+export type AcOutputPoint = {
+  date: string;
+  ac_output: number;
+};
+
+export type AcOutputHistory = {
+  readings: AcOutputPoint[];
+  fetchedAt: number;
+};
+
+export async function getAcOutputHistory(hours: number): Promise<AcOutputHistory> {
+  await connection();
+  const fetchedAt = Date.now();
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(`/ac-output-history?hours=${hours}`));
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return { readings: await response.json(), fetchedAt };
+}
