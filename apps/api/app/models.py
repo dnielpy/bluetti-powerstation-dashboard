@@ -11,7 +11,7 @@ class Summary(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+        DateTime(timezone=True), nullable=False, server_default=func.now(), index=True
     )
     battery_percent: Mapped[int] = mapped_column(Integer, nullable=False)
     ac_output: Mapped[int] = mapped_column(Integer, nullable=False)

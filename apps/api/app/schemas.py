@@ -22,3 +22,10 @@ class SummaryPage(BaseModel):
     total: int
     page_size: int
     offset: int
+
+
+class BatteryStatusPoint(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    date: datetime
+    battery_percent: int

@@ -1,7 +1,8 @@
 from collections.abc import Sequence
+from datetime import datetime
 
 from bluetti_bt_lib import FieldName
-from sqlalchemy import Select, func, select
+from sqlalchemy import Row, Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import bluetti, repository
@@ -43,6 +44,15 @@ async def list_summaries(
     total = await session.scalar(total_query) or 0
 
     return items, total
+
+
+async def list_battery_status(session: AsyncSession, since: datetime) -> Sequence[Row]:
+    query = (
+        select(Summary.date, Summary.battery_percent)
+        .where(Summary.date >= since)
+        .order_by(Summary.date.asc(), Summary.id.asc())
+    )
+    return (await session.execute(query)).all()
 
 
 def build_summary(readings: dict[FieldName, bluetti.Reading]) -> Summary:

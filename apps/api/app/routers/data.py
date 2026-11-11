@@ -1,10 +1,12 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import summaries
 from app.db import get_session
 from app.models import Summary
-from app.schemas import SummaryOut, SummaryPage
+from app.schemas import BatteryStatusPoint, SummaryOut, SummaryPage
 
 router = APIRouter(tags=["data"])
 
@@ -36,3 +38,17 @@ async def list_data(
         page_size=page_size,
         offset=offset,
     )
+
+
+@router.get(
+    "/battery-status",
+    response_model=list[BatteryStatusPoint],
+    description="Battery percentage of every stored reading in the last `hours`, oldest first.",
+)
+async def battery_status(
+    hours: float = Query(24, gt=0, le=168, description="How many hours back to include."),
+    session: AsyncSession = Depends(get_session),
+) -> list[BatteryStatusPoint]:
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    rows = await summaries.list_battery_status(session, since)
+    return [BatteryStatusPoint.model_validate(row) for row in rows]
