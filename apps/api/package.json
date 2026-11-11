@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "uv run uvicorn app.main:app --reload --port 3001",
     "test": "uv run pytest",
-    "db:migrate": "uv run alembic upgrade head"
+    "db:migrate": "uv run alembic upgrade head",
+    "db:seed": "uv run python -m app.seed"
   }
 }

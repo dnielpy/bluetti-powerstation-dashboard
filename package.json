@@ -10,7 +10,8 @@
     "dev:api": "turbo run dev --filter=api",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
-    "db:migrate": "pnpm --filter api db:migrate"
+    "db:migrate": "pnpm --filter api db:migrate",
+    "db:seed": "pnpm --filter api db:seed"
   },
   "packageManager": "pnpm@11.25.0",
   "devDependencies": {
