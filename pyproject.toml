@@ -1,7 +1,7 @@
 [project]
 name = "bluetti-powerstation-api"
 version = "0.1.0"
-description = "API para leer estadísticas de una estación Bluetti vía Bluetooth"
+description = "API to read stats from a Bluetti power station over Bluetooth"
 readme = "README.md"
 authors = [
     { name = "dnielpy", email = "dnielquesada@gmail.com" }

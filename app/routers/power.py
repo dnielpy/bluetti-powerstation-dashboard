@@ -11,21 +11,21 @@ async def _power(field: FieldName) -> dict[str, int | float | str | None]:
     return {"power": reading.value, "unit": reading.unit, "model": reading.model}
 
 
-@router.get("/ac-output", description="Potencia que se está consumiendo por las salidas AC.")
+@router.get("/ac-output", description="Power currently drawn from the AC outlets.")
 async def ac_output() -> dict[str, int | float | str | None]:
     return await _power(FieldName.AC_OUTPUT_POWER)
 
 
-@router.get("/dc-output", description="Potencia que se está consumiendo por las salidas DC/USB.")
+@router.get("/dc-output", description="Power currently drawn from the DC/USB outlets.")
 async def dc_output() -> dict[str, int | float | str | None]:
     return await _power(FieldName.DC_OUTPUT_POWER)
 
 
-@router.get("/ac-input", description="Potencia que está entrando por la toma AC (pared).")
+@router.get("/ac-input", description="Power currently coming in through the AC input (wall).")
 async def ac_input() -> dict[str, int | float | str | None]:
     return await _power(FieldName.AC_INPUT_POWER)
 
 
-@router.get("/dc-input", description="Potencia que está entrando por DC (solar o coche).")
+@router.get("/dc-input", description="Power currently coming in through the DC input (solar or car).")
 async def dc_input() -> dict[str, int | float | str | None]:
     return await _power(FieldName.DC_INPUT_POWER)

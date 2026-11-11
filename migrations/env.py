@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from dotenv import load_dotenv
 
+import app.models
 from app.db import Base, get_database_url
 
 load_dotenv()

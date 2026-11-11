@@ -1,67 +1,68 @@
 # Bluetti Powerstation API
 
-API en FastAPI para conectarse por Bluetooth a una estación de energía Bluetti
-(con [`bluetti-bt-lib`](https://pypi.org/project/bluetti-bt-lib/)) y exponer sus estadísticas.
+FastAPI service that connects to a Bluetti power station over Bluetooth
+(using [`bluetti-bt-lib`](https://pypi.org/project/bluetti-bt-lib/)) and exposes its stats.
 
-## Requisitos
+## Requirements
 
 - [uv](https://docs.astral.sh/uv/)
-- Python 3.12 (uv lo descarga si no está)
+- Python 3.12 (uv downloads it if missing)
 
-## Instalación
+## Installation
 
 ```bash
 uv sync
 ```
 
-## Configuración
+## Configuration
 
-Copia `.env.example` a `.env` y pon el nombre Bluetooth de tu Bluetti (modelo + número de serie, por ejemplo `AC1802530010445974`):
+Copy `.env.example` to `.env` and set your Bluetti's Bluetooth name (model + serial number, e.g. `AC1802530010445974`):
 
 ```bash
 cp .env.example .env
 ```
 
-| Variable | Descripción |
+| Variable | Description |
 |---|---|
-| `BLUETTI_NAME` | Nombre Bluetooth de la Bluetti. De aquí se saca el modelo y se usa para encontrarla. |
-| `BLUETTI_ENCRYPTED` | `true` si tu modelo usa conexión cifrada (por defecto `false`). |
+| `BLUETTI_NAME` | Bluetooth name of the Bluetti. Used to get the model and to find the device. |
+| `BLUETTI_ENCRYPTED` | `true` if your model uses an encrypted connection (default `false`). |
 
-## Base de datos
+## Database
 
-Postgres corre en Docker. Los datos de conexión están en `.env` (`POSTGRES_*` y `DATABASE_URL`).
-
-```bash
-docker compose up -d            # levanta Postgres
-uv run alembic upgrade head     # aplica las migraciones
-```
-
-Para crear una migración después de agregar o cambiar modelos:
+Postgres runs in Docker. Connection settings live in `.env` (`POSTGRES_*` and `DATABASE_URL`).
 
 ```bash
-uv run alembic revision --autogenerate -m "descripcion"
+docker compose up -d
+uv run alembic upgrade head
 ```
 
-## Ejecutar
+To create a migration after adding or changing models:
+
+```bash
+uv run alembic revision --autogenerate -m "description"
+```
+
+## Run
 
 ```bash
 uv run uvicorn app.main:app --reload
 ```
 
 - Health check: http://localhost:8000/health
-- Health check de la base de datos: http://localhost:8000/health/db
-- Batería: http://localhost:8000/battery → `{"battery_percent": 92, "model": "AC180"}`
-- Potencia (W) → `{"power": 120, "unit": "W", "model": "AC180"}`:
-  - http://localhost:8000/ac-output: consumo en las salidas AC
-  - http://localhost:8000/dc-output: consumo en las salidas DC/USB
-  - http://localhost:8000/ac-input: entrada por la toma AC (pared)
-  - http://localhost:8000/dc-input: entrada por DC (solar o coche)
+- Database health check: http://localhost:8000/health/db
+- Battery: http://localhost:8000/battery → `{"battery_percent": 92, "model": "AC180"}`
+- Power (W) → `{"power": 120, "unit": "W", "model": "AC180"}`:
+  - http://localhost:8000/ac-output: power drawn from the AC outlets
+  - http://localhost:8000/dc-output: power drawn from the DC/USB outlets
+  - http://localhost:8000/ac-input: power coming in through the AC input (wall)
+  - http://localhost:8000/dc-input: power coming in through the DC input (solar or car)
+- Stored summary: http://localhost:8000/data/{id} → row from the `summary` table (404 if not found)
 - Docs: http://localhost:8000/docs
 
-Notas:
-- La Bluetti solo acepta una conexión Bluetooth a la vez: cierra la app oficial antes de usar la API.
-- La primera petición a `/battery` tarda más porque busca la Bluetti por su nombre.
-- macOS pedirá permiso de Bluetooth para la terminal la primera vez.
+Notes:
+- The Bluetti only accepts one Bluetooth connection at a time: close the official app before using the API.
+- The first Bluetti request takes longer because it searches for the device by name.
+- macOS asks for Bluetooth permission for the terminal the first time.
 
 ## Tests
 

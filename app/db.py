@@ -13,7 +13,7 @@ class Base(DeclarativeBase):
 def get_database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:
-        raise RuntimeError("La variable de entorno DATABASE_URL no está definida")
+        raise RuntimeError("DATABASE_URL environment variable is not set")
     return url
 
 

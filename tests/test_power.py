@@ -32,7 +32,7 @@ def test_power(monkeypatch: pytest.MonkeyPatch, path: str, field: FieldName) -> 
 
 def test_power_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
     async def fake_read_field(field: FieldName) -> bluetti.Reading:
-        raise bluetti.BluettiUnavailableError("No se pudo leer ac_output_power")
+        raise bluetti.BluettiUnavailableError("Could not read ac_output_power")
 
     monkeypatch.setattr(bluetti, "read_field", fake_read_field)
 

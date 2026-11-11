@@ -15,6 +15,6 @@ async def health_db() -> dict[str, str]:
     try:
         await db.check_connection()
     except Exception as err:
-        raise HTTPException(status_code=503, detail=f"Base de datos no disponible: {err}")
+        raise HTTPException(status_code=503, detail=f"Database unavailable: {err}")
 
     return {"status": "ok"}

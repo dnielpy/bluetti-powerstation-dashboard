@@ -23,7 +23,7 @@ def test_battery(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_battery_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
     async def fake_read_field(field: FieldName) -> bluetti.Reading:
-        raise bluetti.BluettiUnavailableError("No se pudo leer total_battery_percent")
+        raise bluetti.BluettiUnavailableError("Could not read total_battery_percent")
 
     monkeypatch.setattr(bluetti, "read_field", fake_read_field)
 
@@ -47,4 +47,4 @@ def test_battery_unsupported_model(monkeypatch: pytest.MonkeyPatch) -> None:
     response = client.get("/battery")
 
     assert response.status_code == 500
-    assert "no soportado" in response.json()["detail"]
+    assert "Unsupported model" in response.json()["detail"]

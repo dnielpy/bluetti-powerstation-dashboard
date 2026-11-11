@@ -35,7 +35,7 @@ _address: str | None = None
 def _get_name() -> str:
     name = os.environ.get("BLUETTI_NAME")
     if not name:
-        raise BluettiConfigError("La variable de entorno BLUETTI_NAME no está definida")
+        raise BluettiConfigError("BLUETTI_NAME environment variable is not set")
     return name
 
 
@@ -46,7 +46,7 @@ def _use_encryption() -> bool:
 def _build_device(name: str) -> BluettiDevice:
     device = build_device(name)
     if device is None:
-        raise BluettiConfigError(f"Modelo no soportado para BLUETTI_NAME={name}")
+        raise BluettiConfigError(f"Unsupported model for BLUETTI_NAME={name}")
     return device
 
 
@@ -56,7 +56,7 @@ async def _get_address(name: str) -> str:
     if _address is None:
         found = await BleakScanner.find_device_by_name(name, timeout=10)
         if found is None:
-            raise BluettiUnavailableError(f"No se encontró la Bluetti {name} por Bluetooth")
+            raise BluettiUnavailableError(f"Bluetti {name} not found over Bluetooth")
         _address = found.address
 
     return _address
@@ -69,7 +69,7 @@ async def read_field(field: FieldName) -> Reading:
 
     device_field = next((f for f in device.fields if f.name == field.value), None)
     if device_field is None:
-        raise BluettiConfigError(f"El modelo {model} no expone el dato {field.value}")
+        raise BluettiConfigError(f"Model {model} does not expose {field.value}")
 
     address = await _get_address(name)
 
@@ -85,6 +85,6 @@ async def read_field(field: FieldName) -> Reading:
 
     value = None if data is None else data.get(field.value)
     if value is None:
-        raise BluettiUnavailableError(f"No se pudo leer {field.value}")
+        raise BluettiUnavailableError(f"Could not read {field.value}")
 
     return Reading(value=value, unit=get_unit(field), model=model)
