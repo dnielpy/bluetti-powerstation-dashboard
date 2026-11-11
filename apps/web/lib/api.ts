@@ -117,3 +117,35 @@ export async function getAcOutputHistory(hours: number): Promise<AcOutputHistory
 
   return { readings: await response.json(), fetchedAt };
 }
+
+export type Period = { start: string; end: string; duration_hours: number };
+
+export type PowerStatus = {
+  receiving_ac: boolean | null;
+  current_since: string | null;
+  last_with_power: string | null;
+  last_blackout: Period | null;
+  last_power_period: Period | null;
+};
+
+export type PowerStatusResult = {
+  status: PowerStatus;
+  fetchedAt: number;
+};
+
+export async function getPowerStatus(): Promise<PowerStatusResult> {
+  await connection();
+  const fetchedAt = Date.now();
+  let response: Response;
+  try {
+    response = await fetch(apiUrl("/power-status"));
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return { status: await response.json(), fetchedAt };
+}
