@@ -57,6 +57,10 @@ uv run uvicorn app.main:app --reload
   - http://localhost:8000/ac-input: power coming in through the AC input (wall)
   - http://localhost:8000/dc-input: power coming in through the DC input (solar or car)
 - Stored summary: http://localhost:8000/data/{id} → row from the `summary` table (404 if not found)
+- Summary list: http://localhost:8000/data-summary → `{"items": [...], "total": 16, "page_size": 10, "offset": 0}`, newest first. All query params are optional:
+  - `page_size`: how many records to return (default `10`, max `100`)
+  - `offset`: how many records to skip (default `0`)
+  - `ac` / `dc`: `true` or `false` to filter by whether AC/DC input was active
 - Docs: http://localhost:8000/docs
 
 Notes:

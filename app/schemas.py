@@ -15,3 +15,10 @@ class SummaryOut(BaseModel):
     dc_input: int
     ac: bool
     dc: bool
+
+
+class SummaryPage(BaseModel):
+    items: list[SummaryOut]
+    total: int
+    page_size: int
+    offset: int
