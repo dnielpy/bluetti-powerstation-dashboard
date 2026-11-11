@@ -26,6 +26,7 @@ cp .env.example .env
 |---|---|
 | `BLUETTI_NAME` | Bluetooth name of the Bluetti. Used to get the model and to find the device. |
 | `BLUETTI_ENCRYPTED` | `true` if your model uses an encrypted connection (default `false`). |
+| `SUMMARY_JOB_INTERVAL_SECONDS` | How often the background job stores a new summary (default `300`, `0` disables it). |
 
 ## Database
 
@@ -68,6 +69,12 @@ Notes:
 - The Bluetti only accepts one Bluetooth connection at a time: close the official app before using the API.
 - The first Bluetti request takes longer because it searches for the device by name.
 - macOS asks for Bluetooth permission for the terminal the first time.
+
+## Summary job
+
+While the API is running, a background job reads the Bluetti and stores a new `summary` row every `SUMMARY_JOB_INTERVAL_SECONDS` (5 minutes by default). It runs once at startup, then on every interval. If a reading fails, the error is logged and the job tries again on the next interval.
+
+Run the API with a single worker: each worker starts its own job.
 
 ## Tests
 

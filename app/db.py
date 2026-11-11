@@ -1,5 +1,6 @@
 import os
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -31,10 +32,16 @@ def get_engine() -> AsyncEngine:
     return _engine
 
 
-async def get_session() -> AsyncIterator[AsyncSession]:
+@asynccontextmanager
+async def session_scope() -> AsyncIterator[AsyncSession]:
     get_engine()
     assert _sessionmaker is not None
     async with _sessionmaker() as session:
+        yield session
+
+
+async def get_session() -> AsyncIterator[AsyncSession]:
+    async with session_scope() as session:
         yield session
 
 

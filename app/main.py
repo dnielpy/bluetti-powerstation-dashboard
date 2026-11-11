@@ -1,18 +1,32 @@
+import asyncio
+import contextlib
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-from app import db
+from app import db, jobs
 from app.routers import battery, data, health, power, update
 
 load_dotenv()
 
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s:     %(name)s - %(message)s")
+logging.getLogger("app").setLevel(logging.INFO)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    interval = jobs.get_interval_seconds()
+    task = asyncio.create_task(jobs.run_summary_job(interval)) if interval > 0 else None
+
     yield
+
+    if task is not None:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
     await db.dispose_engine()
 
 
