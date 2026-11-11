@@ -9,6 +9,7 @@ from bluetti_bt_lib import (
     DeviceReaderConfig,
     FieldName,
     build_device,
+    get_unit,
 )
 from bluetti_bt_lib.registers import ReadableRegisters
 
@@ -22,8 +23,9 @@ class BluettiUnavailableError(Exception):
 
 
 @dataclass
-class BatteryReading:
-    percent: int
+class Reading:
+    value: int | float
+    unit: str | None
     model: str
 
 
@@ -61,12 +63,16 @@ async def _get_address(name: str) -> str:
     return _address
 
 
-async def read_battery() -> BatteryReading:
+async def read_field(field: FieldName) -> Reading:
     name = _get_name()
     device = _build_device(name)
-    address = await _get_address(name)
+    model = type(device).__name__
 
-    soc_field = next(f for f in device.fields if f.name == FieldName.BATTERY_SOC.value)
+    device_field = next((f for f in device.fields if f.name == field.value), None)
+    if device_field is None:
+        raise BluettiConfigError(f"El modelo {model} no expone el dato {field.value}")
+
+    address = await _get_address(name)
 
     reader = DeviceReader(
         address,
@@ -75,11 +81,11 @@ async def read_battery() -> BatteryReading:
         DeviceReaderConfig(use_encryption=_use_encryption()),
     )
     data = await reader.read(
-        only_registers=[ReadableRegisters(soc_field.address, soc_field.size)]
+        only_registers=[ReadableRegisters(device_field.address, device_field.size)]
     )
 
-    percent = None if data is None else data.get(FieldName.BATTERY_SOC.value)
-    if percent is None:
-        raise BluettiUnavailableError("No se pudo leer el % de batería")
+    value = None if data is None else data.get(field.value)
+    if value is None:
+        raise BluettiUnavailableError(f"No se pudo leer {field.value}")
 
-    return BatteryReading(percent=percent, model=type(device).__name__)
+    return Reading(value=value, unit=get_unit(field), model=model)

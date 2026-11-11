@@ -1,17 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from bluetti_bt_lib import FieldName
+from fastapi import APIRouter
 
-from app import bluetti
+from app.routers.common import read_field_or_http_error
 
 router = APIRouter(tags=["battery"])
 
 
 @router.get("/battery")
-async def battery() -> dict[str, int | str]:
-    try:
-        reading = await bluetti.read_battery()
-    except bluetti.BluettiConfigError as err:
-        raise HTTPException(status_code=500, detail=str(err))
-    except bluetti.BluettiUnavailableError as err:
-        raise HTTPException(status_code=503, detail=str(err))
-
-    return {"battery_percent": reading.percent, "model": reading.model}
+async def battery() -> dict[str, int | float | str]:
+    reading = await read_field_or_http_error(FieldName.BATTERY_SOC)
+    return {"battery_percent": reading.value, "model": reading.model}

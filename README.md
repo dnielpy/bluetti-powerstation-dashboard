@@ -35,6 +35,11 @@ uv run uvicorn app.main:app --reload
 
 - Health check: http://localhost:8000/health
 - Batería: http://localhost:8000/battery → `{"battery_percent": 92, "model": "AC180"}`
+- Potencia (W) → `{"power": 120, "unit": "W", "model": "AC180"}`:
+  - http://localhost:8000/ac-output: consumo en las salidas AC
+  - http://localhost:8000/dc-output: consumo en las salidas DC/USB
+  - http://localhost:8000/ac-input: entrada por la toma AC (pared)
+  - http://localhost:8000/dc-input: entrada por DC (solar o coche)
 - Docs: http://localhost:8000/docs
 
 Notas:

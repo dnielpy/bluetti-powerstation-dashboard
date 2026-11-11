@@ -1,4 +1,5 @@
 import pytest
+from bluetti_bt_lib import FieldName
 from fastapi.testclient import TestClient
 
 from app import bluetti
@@ -8,10 +9,11 @@ client = TestClient(app)
 
 
 def test_battery(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def fake_read_battery() -> bluetti.BatteryReading:
-        return bluetti.BatteryReading(percent=92, model="AC180")
+    async def fake_read_field(field: FieldName) -> bluetti.Reading:
+        assert field == FieldName.BATTERY_SOC
+        return bluetti.Reading(value=92, unit="%", model="AC180")
 
-    monkeypatch.setattr(bluetti, "read_battery", fake_read_battery)
+    monkeypatch.setattr(bluetti, "read_field", fake_read_field)
 
     response = client.get("/battery")
 
@@ -20,10 +22,10 @@ def test_battery(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_battery_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def fake_read_battery() -> bluetti.BatteryReading:
-        raise bluetti.BluettiUnavailableError("No se pudo leer el % de batería")
+    async def fake_read_field(field: FieldName) -> bluetti.Reading:
+        raise bluetti.BluettiUnavailableError("No se pudo leer total_battery_percent")
 
-    monkeypatch.setattr(bluetti, "read_battery", fake_read_battery)
+    monkeypatch.setattr(bluetti, "read_field", fake_read_field)
 
     response = client.get("/battery")
 
