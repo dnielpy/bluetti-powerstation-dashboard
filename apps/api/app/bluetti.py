@@ -30,6 +30,9 @@ class Reading:
     model: str
 
 
+# DeviceReader.read() has no overall timeout and can wait forever if BlueZ stops answering
+READ_TIMEOUT_SECONDS = 60
+
 _address: str | None = None
 
 
@@ -85,7 +88,11 @@ async def read_fields(fields: Sequence[FieldName]) -> dict[FieldName, Reading]:
         ReadableRegisters(device_fields[field.value].address, device_fields[field.value].size)
         for field in fields
     ]
-    data = await reader.read(only_registers=registers) or {}
+    try:
+        async with asyncio.timeout(READ_TIMEOUT_SECONDS):
+            data = await reader.read(only_registers=registers) or {}
+    except TimeoutError:
+        raise BluettiUnavailableError(f"Reading from Bluetti timed out after {READ_TIMEOUT_SECONDS}s") from None
 
     unread = [field.value for field in fields if data.get(field.value) is None]
     if unread:
