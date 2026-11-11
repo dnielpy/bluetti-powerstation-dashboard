@@ -3,12 +3,12 @@ import logging
 import os
 import time
 
-from app import db, summaries
+from app import bluetti, db, summaries
 from app.models import Summary
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_INTERVAL_SECONDS = 300
+DEFAULT_INTERVAL_SECONDS = 7
 
 
 def get_interval_seconds() -> int:
@@ -19,11 +19,14 @@ async def collect_once() -> Summary | None:
     try:
         async with db.session_scope() as session:
             summary = await summaries.collect_summary(session)
-    except Exception:
+    except Exception as err:
         task = asyncio.current_task()
         if task is not None and task.cancelling():
             raise asyncio.CancelledError
-        logger.exception("Summary job failed")
+        if isinstance(err, bluetti.BluettiUnavailableError):
+            logger.warning("Summary job skipped: %s", err)
+        else:
+            logger.exception("Summary job failed")
         return None
 
     logger.info(

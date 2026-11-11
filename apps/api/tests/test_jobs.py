@@ -44,10 +44,10 @@ async def test_collect_once_survives_errors(fake_session_scope, monkeypatch: pyt
     assert await jobs.collect_once() is None
 
 
-def test_interval_defaults_to_five_minutes(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_interval_defaults_to_seven_seconds(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("SUMMARY_JOB_INTERVAL_SECONDS", raising=False)
 
-    assert jobs.get_interval_seconds() == 300
+    assert jobs.get_interval_seconds() == 7
 
 
 def test_interval_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
