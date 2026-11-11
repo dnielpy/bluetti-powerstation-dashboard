@@ -3,10 +3,10 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import summaries
+from app import blackouts, summaries
 from app.db import get_session
 from app.models import Summary
-from app.schemas import BatteryStatusPoint, SummaryOut, SummaryPage
+from app.schemas import BatteryStatusPoint, BlackoutOut, SummaryOut, SummaryPage
 
 router = APIRouter(tags=["data"])
 
@@ -52,3 +52,29 @@ async def battery_status(
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
     rows = await summaries.list_battery_status(session, since)
     return [BatteryStatusPoint.model_validate(row) for row in rows]
+
+
+@router.get(
+    "/blackouts",
+    response_model=list[BlackoutOut],
+    description=(
+        "Blackouts in the last `hours`, oldest first. A blackout is a run of readings where the Bluetti "
+        "is not receiving AC power. It ends with the first reading that has AC power again, or at the last "
+        "reading before a gap of more than 5 minutes without readings."
+    ),
+)
+async def list_blackouts(
+    hours: float = Query(24, gt=0, le=168, description="How many hours back to include."),
+    session: AsyncSession = Depends(get_session),
+) -> list[BlackoutOut]:
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    rows = await summaries.list_ac_states(session, since)
+    return [
+        BlackoutOut(
+            start=blackout.start,
+            end=blackout.end,
+            duration_hours=blackout.duration_hours,
+            ongoing=blackout.ongoing,
+        )
+        for blackout in blackouts.find_blackouts((row.date, row.ac) for row in rows)
+    ]

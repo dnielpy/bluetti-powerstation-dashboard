@@ -29,3 +29,10 @@ class BatteryStatusPoint(BaseModel):
 
     date: datetime
     battery_percent: int
+
+
+class BlackoutOut(BaseModel):
+    start: datetime
+    end: datetime
+    duration_hours: float
+    ongoing: bool

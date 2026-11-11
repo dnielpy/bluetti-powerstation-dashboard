@@ -55,6 +55,15 @@ async def list_battery_status(session: AsyncSession, since: datetime) -> Sequenc
     return (await session.execute(query)).all()
 
 
+async def list_ac_states(session: AsyncSession, since: datetime) -> Sequence[Row]:
+    query = (
+        select(Summary.date, Summary.ac)
+        .where(Summary.date >= since)
+        .order_by(Summary.date.asc(), Summary.id.asc())
+    )
+    return (await session.execute(query)).all()
+
+
 def build_summary(readings: dict[FieldName, bluetti.Reading]) -> Summary:
     ac_input = int(readings[FieldName.AC_INPUT_POWER].value)
     dc_input = int(readings[FieldName.DC_INPUT_POWER].value)
