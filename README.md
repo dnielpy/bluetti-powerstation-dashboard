@@ -82,6 +82,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 - Web: http://HOST:3000 · API: http://HOST:3001 (ports set by `WEB_PORT` / `API_PORT`)
 - Postgres is not published outside the Docker network.
+- Dates rendered by the web server use `TZ` (default `America/Havana`); set it to your timezone.
 - The API container runs as `APP_UID` (a user that exists on the host) and without Docker's default AppArmor profile: otherwise D-Bus rejects its connection to BlueZ.
 - The API applies migrations on startup and runs with a single worker, so the summary job runs once.
 - Containers restart automatically, have health checks and rotate their logs (3 × 10 MB).
