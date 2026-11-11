@@ -68,3 +68,25 @@ export async function getBatteryStatus(hours: number): Promise<BatteryStatus> {
 
   return { readings: await response.json(), fetchedAt };
 }
+
+export type Blackout = {
+  start: string;
+  end: string;
+  duration_hours: number;
+  ongoing: boolean;
+};
+
+export async function getBlackouts(hours: number): Promise<Blackout[]> {
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(`/blackouts?hours=${hours}`));
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return response.json();
+}

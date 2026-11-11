@@ -1,16 +1,37 @@
 import Link from "next/link";
 
-import { TIME_RANGES, type TimeRange } from "@/lib/time-ranges";
+import type { TimeRange } from "@/lib/time-ranges";
 
-export function RangeFilter({ selected }: { selected: TimeRange }) {
+type RangeFilterProps = {
+  label: string;
+  param: string;
+  ranges: TimeRange[];
+  selected: TimeRange;
+  searchParams: Record<string, string | string[] | undefined>;
+};
+
+function hrefFor(param: string, hours: number, searchParams: RangeFilterProps["searchParams"]): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (typeof value === "string") query.set(key, value);
+  }
+  query.set(param, String(hours));
+  return `/stats?${query.toString()}`;
+}
+
+export function RangeFilter({ label, param, ranges, selected, searchParams }: RangeFilterProps) {
   return (
-    <nav aria-label="Time range" className="inline-flex self-start rounded-lg border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900">
-      {TIME_RANGES.map((range) => {
+    <nav
+      aria-label={label}
+      className="inline-flex self-start rounded-lg border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900"
+    >
+      {ranges.map((range) => {
         const active = range.hours === selected.hours;
         return (
           <Link
             key={range.hours}
-            href={`/stats?hours=${range.hours}`}
+            href={hrefFor(param, range.hours, searchParams)}
+            scroll={false}
             aria-current={active ? "page" : undefined}
             title={range.description}
             className={`rounded-md px-3 py-1 text-sm font-medium tabular-nums transition-colors ${
