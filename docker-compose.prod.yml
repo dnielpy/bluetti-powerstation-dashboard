@@ -35,8 +35,11 @@ services:
       BLUETTI_ENCRYPTED: ${BLUETTI_ENCRYPTED:-false}
       SUMMARY_JOB_INTERVAL_SECONDS: ${SUMMARY_JOB_INTERVAL_SECONDS:-7}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    # BlueZ's D-Bus policy rejects uids that don't exist on the host, so run as a host user
+    user: "${APP_UID:-1000}"
     group_add:
       - "${BLUETOOTH_GID:?Set BLUETOOTH_GID to the host bluetooth group id (getent group bluetooth)}"
+    # Docker's default AppArmor profile blocks D-Bus messages to BlueZ
     security_opt:
       - apparmor=unconfined
     volumes:

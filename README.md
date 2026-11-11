@@ -71,9 +71,10 @@ On the host:
 sudo apt install bluez
 cp .env.production.example .env.production
 getent group bluetooth | cut -d: -f3
+id -u
 ```
 
-Edit `.env.production`: set a strong `POSTGRES_PASSWORD`, your `BLUETTI_NAME`, and `BLUETOOTH_GID` to the number printed above. Then:
+Edit `.env.production`: set a strong `POSTGRES_PASSWORD`, your `BLUETTI_NAME`, `BLUETOOTH_GID` to the first number printed above and `APP_UID` to the second one. Then:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
@@ -81,6 +82,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 - Web: http://HOST:3000 · API: http://HOST:3001 (ports set by `WEB_PORT` / `API_PORT`)
 - Postgres is not published outside the Docker network.
+- The API container runs as `APP_UID` (a user that exists on the host) and without Docker's default AppArmor profile: otherwise D-Bus rejects its connection to BlueZ.
 - The API applies migrations on startup and runs with a single worker, so the summary job runs once.
 - Containers restart automatically, have health checks and rotate their logs (3 × 10 MB).
 - Build the images on the host itself (or with `docker buildx --platform linux/arm64` for a Raspberry Pi).
