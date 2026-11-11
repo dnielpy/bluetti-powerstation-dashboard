@@ -27,13 +27,14 @@ Each app has its own README with details.
 ```bash
 cp .env.example .env
 cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
 pnpm install
 cd apps/api && uv sync && cd ../..
 pnpm db:up
 pnpm db:migrate
 ```
 
-Set `BLUETTI_NAME` (and `BLUETTI_ENCRYPTED` if needed) in `apps/api/.env`.
+Set `BLUETTI_NAME` (and `BLUETTI_ENCRYPTED` if needed) in `apps/api/.env`. The web app reads the API base URL from `API_URL` in `apps/web/.env.local` (default `http://localhost:3001`).
 
 ## Development
 
