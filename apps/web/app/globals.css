@@ -50,7 +50,7 @@ body {
 
 .comet {
   stroke-dasharray: var(--comet-length) 2;
-  animation: comet-travel 12s linear infinite;
+  animation: comet-travel var(--comet-duration, 12s) linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

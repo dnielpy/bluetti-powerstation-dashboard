@@ -2,7 +2,7 @@
 
 import { type KeyboardEvent, type PointerEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
-import { CometTrail } from "@/components/stats/comet-trail";
+import { CometTrail } from "@/components/comet-trail";
 import { pointTrends, splitByTrend, type Trend } from "@/lib/battery-series";
 import { PULSE_COLORS, TREND_COLORS, TREND_LABELS } from "@/lib/chart-colors";
 import { formatTimeTick, formatTooltipTime, nearestIndex, timeTicks } from "@/lib/chart-time";
