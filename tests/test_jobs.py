@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -53,3 +54,25 @@ def test_interval_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SUMMARY_JOB_INTERVAL_SECONDS", "60")
 
     assert jobs.get_interval_seconds() == 60
+
+
+@pytest.mark.anyio
+async def test_job_stops_when_cancelled_during_a_read(fake_session_scope, monkeypatch: pytest.MonkeyPatch) -> None:
+    reading = asyncio.Event()
+
+    async def fake_collect_summary(session: object) -> Summary:
+        reading.set()
+        try:
+            await asyncio.sleep(10)
+        except BaseException:
+            pass
+        raise bluetti.BluettiUnavailableError("Could not read total_battery_percent")
+
+    monkeypatch.setattr(summaries, "collect_summary", fake_collect_summary)
+
+    task = asyncio.create_task(jobs.run_summary_job(300))
+    await reading.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await asyncio.wait_for(task, timeout=1)

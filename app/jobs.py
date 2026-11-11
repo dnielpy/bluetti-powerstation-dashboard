@@ -20,6 +20,9 @@ async def collect_once() -> Summary | None:
         async with db.session_scope() as session:
             summary = await summaries.collect_summary(session)
     except Exception:
+        task = asyncio.current_task()
+        if task is not None and task.cancelling():
+            raise asyncio.CancelledError
         logger.exception("Summary job failed")
         return None
 
