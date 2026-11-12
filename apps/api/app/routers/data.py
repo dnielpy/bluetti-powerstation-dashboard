@@ -3,13 +3,15 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import blackouts, power_status, summaries
+from app import battery_estimate, blackouts, power_status, summaries
 from app.db import get_session
 from app.models import Summary
 from app.schemas import (
     AcOutputPoint,
+    BatteryEstimateOut,
     BatteryStatusPoint,
     BlackoutOut,
+    DrainModelOut,
     PeriodOut,
     PowerStatusOut,
     SummaryOut,
@@ -125,4 +127,39 @@ async def get_power_status(session: AsyncSession = Depends(get_session)) -> Powe
         last_with_power=status.last_with_power,
         last_blackout=_period_out(status.last_blackout),
         last_power_period=_period_out(status.last_power_period),
+    )
+
+
+@router.get(
+    "/battery-estimate",
+    response_model=BatteryEstimateOut,
+    description=(
+        "When the battery reaches the reserve level (BATTERY_RESERVE_PERCENT, 20 % by default) at the current load. "
+        "The load is the average of the last 10 seconds. The drain rate comes from a line fitted to the 1 % steps "
+        "of the last 72 hours of discharge (drain = alpha * load + beta), pulled towards the nominal capacity while "
+        "there is little history. `eta_earliest` and `eta_latest` spread the drain by how much past steps varied. "
+        "`status` is discharging, charging, reserve, idle (more than 48 h or no drain), stale or no_data."
+    ),
+)
+async def get_battery_estimate(session: AsyncSession = Depends(get_session)) -> BatteryEstimateOut:
+    result = await battery_estimate.get_estimate(session, datetime.now(timezone.utc))
+    model = result.model
+    return BatteryEstimateOut(
+        computed_at=result.computed_at,
+        status=result.status,
+        soc=result.soc,
+        soc_estimate=result.soc_estimate,
+        load_w=result.load_w,
+        drain_pct_per_hour=result.drain_pct_per_hour,
+        reserve_percent=result.reserve_percent,
+        eta=result.eta,
+        eta_earliest=result.eta_earliest,
+        eta_latest=result.eta_latest,
+        hours_left=result.hours_left,
+        model=DrainModelOut(
+            wh_per_percent=round(model.wh_per_percent, 2),
+            idle_w=round(model.idle_w, 1),
+            steps_used=model.steps_used,
+            from_history=model.steps_used > 0,
+        ),
     )

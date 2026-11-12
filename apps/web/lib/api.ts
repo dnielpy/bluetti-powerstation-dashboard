@@ -149,3 +149,35 @@ export async function getPowerStatus(): Promise<PowerStatusResult> {
 
   return { status: await response.json(), fetchedAt };
 }
+
+export type BatteryEstimateStatus = "discharging" | "charging" | "reserve" | "idle" | "stale" | "no_data";
+
+export type BatteryEstimate = {
+  computed_at: string;
+  status: BatteryEstimateStatus;
+  soc: number | null;
+  soc_estimate: number | null;
+  load_w: number | null;
+  drain_pct_per_hour: number | null;
+  reserve_percent: number;
+  eta: string | null;
+  eta_earliest: string | null;
+  eta_latest: string | null;
+  hours_left: number | null;
+  model: { wh_per_percent: number; idle_w: number; steps_used: number; from_history: boolean };
+};
+
+export async function getBatteryEstimate(): Promise<BatteryEstimate> {
+  let response: Response;
+  try {
+    response = await fetch(apiUrl("/battery-estimate"), { cache: "no-store" });
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return response.json();
+}

@@ -86,6 +86,7 @@ To update a running deployment later, run `./scripts/update.sh`: it stops the co
 - Postgres is not published outside the Docker network.
 - Dates rendered by the web server use `TZ` (default `America/Havana`); set it to your timezone.
 - The API container runs as `APP_UID` (a user that exists on the host) and without Docker's default AppArmor profile: otherwise D-Bus rejects its connection to BlueZ.
+- `GET /battery-estimate` tells when the battery reaches `BATTERY_RESERVE_PERCENT` (default 20 %) at the current load, the average of the last 10 seconds. It learns how fast the battery really drains from every 1 % step of the last 72 hours of discharge (a line drain = a × load + b, so inverter losses and idle draw are included), starting from `BATTERY_CAPACITY_WH` (default 1152, the AC180) while there is no history. The stats page shows it under the battery level and recalculates it every 30 seconds.
 - The API applies migrations on startup and runs with a single worker, so the summary job runs once.
 - Containers restart automatically, have health checks and rotate their logs (3 × 10 MB).
 - Build the images on the host itself (or with `docker buildx --platform linux/arm64` for a Raspberry Pi).

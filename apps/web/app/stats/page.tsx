@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
+import { BatteryEstimate } from "@/components/stats/battery-estimate";
 import { BatteryStats } from "@/components/stats/battery-stats";
 import { BlackoutStats } from "@/components/stats/blackout-stats";
 import { ChartCardSkeleton } from "@/components/stats/chart-card-skeleton";
@@ -24,6 +25,7 @@ export default function StatsPage({ searchParams }: PageProps<"/stats">) {
       <Suspense fallback={<ChartCardSkeleton height={560} />}>
         <BatteryStats searchParams={searchParams} />
       </Suspense>
+      <BatteryEstimate />
       <Suspense fallback={<ChartCardSkeleton height={220} />}>
         <BlackoutStats searchParams={searchParams} />
       </Suspense>

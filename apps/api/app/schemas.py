@@ -57,3 +57,25 @@ class PowerStatusOut(BaseModel):
     last_with_power: datetime | None
     last_blackout: PeriodOut | None
     last_power_period: PeriodOut | None
+
+
+class DrainModelOut(BaseModel):
+    wh_per_percent: float
+    idle_w: float
+    steps_used: int
+    from_history: bool
+
+
+class BatteryEstimateOut(BaseModel):
+    computed_at: datetime
+    status: str
+    soc: int | None
+    soc_estimate: float | None
+    load_w: float | None
+    drain_pct_per_hour: float | None
+    reserve_percent: float
+    eta: datetime | None
+    eta_earliest: datetime | None
+    eta_latest: datetime | None
+    hours_left: float | None
+    model: DrainModelOut
