@@ -8,7 +8,7 @@ const SEVEN_DAYS: TimeRange = { hours: 168, label: "7d", description: "Last 7 da
 
 export const TIME_RANGES: TimeRange[] = [ONE_HOUR, SIX_HOURS, TWELVE_HOURS, ONE_DAY, SEVEN_DAYS];
 
-export const DEFAULT_TIME_RANGE = SIX_HOURS;
+export const DEFAULT_TIME_RANGE = TWELVE_HOURS;
 
 export function parseTimeRange(value: string | string[] | undefined, ranges: TimeRange[]): TimeRange {
   const hours = Number(Array.isArray(value) ? value[0] : value);
