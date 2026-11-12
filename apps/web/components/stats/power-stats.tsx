@@ -43,7 +43,7 @@ export async function PowerStats({ searchParams }: { searchParams: SearchParams 
           ranges={TIME_RANGES}
           selected={range}
           searchParams={params}
-          path="/consumption"
+          path="/battery"
         />
       }
     >

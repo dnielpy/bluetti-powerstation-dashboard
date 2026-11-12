@@ -40,7 +40,7 @@ export async function BatteryStats({ searchParams }: { searchParams: SearchParam
           ranges={TIME_RANGES}
           selected={range}
           searchParams={params}
-          path="/electricity"
+          path="/battery"
         />
       }
     >

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Stats was split into Electricity, Blackouts and Consumption; old links land on the first one
+// Stats moved into Battery; old links land there
 export default function StatsPage() {
-  redirect("/electricity");
+  redirect("/battery");
 }

@@ -1,9 +1,18 @@
 import type { Blackout } from "@/lib/api";
 import { BLACKOUT_COLOR, formatDateTime, formatDuration, formatTick, hourTicks } from "@/lib/blackout-format";
 
-const ONGOING_TEXTURE = `repeating-linear-gradient(45deg, ${BLACKOUT_COLOR} 0 6px, color-mix(in srgb, ${BLACKOUT_COLOR} 70%, white) 6px 9px)`;
+function ongoingTexture(color: string): string {
+  return `repeating-linear-gradient(45deg, ${color} 0 6px, color-mix(in srgb, ${color} 70%, white) 6px 9px)`;
+}
 
-export function BlackoutChart({ blackouts }: { blackouts: Blackout[] }) {
+type BlackoutChartProps = {
+  blackouts: Blackout[];
+  /** Red for blackouts; the same chart ranks periods with power in green. */
+  color?: string;
+  label?: string;
+};
+
+export function BlackoutChart({ blackouts, color = BLACKOUT_COLOR, label = "Blackout" }: BlackoutChartProps) {
   const ticks = hourTicks(Math.max(...blackouts.map((blackout) => blackout.duration_hours)));
   const top = ticks.at(-1)!;
   const percent = (hours: number) => `${(hours / top) * 100}%`;
@@ -29,12 +38,12 @@ export function BlackoutChart({ blackouts }: { blackouts: Blackout[] }) {
             />
           ))}
 
-          <ul aria-label="Blackouts">
+          <ul aria-label={`${label}s`}>
             {blackouts.map((blackout) => (
               <li
                 key={blackout.start}
                 tabIndex={0}
-                aria-label={`Blackout from ${formatDateTime(blackout.start)} ${
+                aria-label={`${label} from ${formatDateTime(blackout.start)} ${
                   blackout.ongoing ? "still ongoing" : `to ${formatDateTime(blackout.end)}`
                 }, ${formatDuration(blackout.duration_hours)}`}
                 className="group relative flex h-9 items-center outline-none"
@@ -43,7 +52,7 @@ export function BlackoutChart({ blackouts }: { blackouts: Blackout[] }) {
                   className="block h-5 min-w-0.5 rounded-r transition-opacity group-hover:opacity-80 group-focus-visible:opacity-80"
                   style={{
                     width: percent(blackout.duration_hours),
-                    background: blackout.ongoing ? ONGOING_TEXTURE : BLACKOUT_COLOR,
+                    background: blackout.ongoing ? ongoingTexture(color) : color,
                   }}
                 />
                 <span
@@ -56,7 +65,7 @@ export function BlackoutChart({ blackouts }: { blackouts: Blackout[] }) {
 
                 <span className="pointer-events-none invisible absolute bottom-full left-0 z-10 mb-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-sm group-hover:visible group-focus-visible:visible dark:border-zinc-700 dark:bg-zinc-800">
                   <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-sm" style={{ background: BLACKOUT_COLOR }} />
+                    <span className="h-2.5 w-2.5 rounded-sm" style={{ background: color }} />
                     <span className="text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                       {formatDuration(blackout.duration_hours)}
                     </span>
