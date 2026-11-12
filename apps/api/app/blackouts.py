@@ -2,7 +2,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-MAX_READING_GAP = timedelta(minutes=5)
+# A shorter gap without readings is the API losing the Bluetti over Bluetooth, not the end of the blackout
+MAX_READING_GAP = timedelta(minutes=15)
 
 
 @dataclass

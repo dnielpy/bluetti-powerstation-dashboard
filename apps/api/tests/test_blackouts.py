@@ -57,6 +57,23 @@ def test_gap_without_readings_closes_the_blackout_at_the_last_reading() -> None:
     ]
 
 
+def test_reconnection_gap_keeps_the_same_blackout() -> None:
+    readings = [(T0, False), (T0 + timedelta(minutes=13), False), (T0 + timedelta(minutes=24), False)]
+
+    [blackout] = find_blackouts(readings)
+
+    assert (blackout.start, blackout.end, blackout.ongoing) == (T0, T0 + timedelta(minutes=24), True)
+
+
+def test_gap_longer_than_15_minutes_splits_the_blackout() -> None:
+    readings = [(T0, False), (T0 + timedelta(minutes=16), False)]
+
+    assert [(b.start, b.end, b.ongoing) for b in find_blackouts(readings)] == [
+        (T0, T0, False),
+        (T0 + timedelta(minutes=16), T0 + timedelta(minutes=16), True),
+    ]
+
+
 def test_duration_hours() -> None:
     [blackout] = find_blackouts(_readings(False, False, True, step=timedelta(minutes=45)), max_gap=timedelta(hours=1))
 

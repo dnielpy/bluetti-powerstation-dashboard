@@ -70,7 +70,8 @@ async def battery_status(
     description=(
         "Blackouts in the last `hours`, oldest first. A blackout is a run of readings where the Bluetti "
         "is not receiving AC power. It ends with the first reading that has AC power again, or at the last "
-        "reading before a gap of more than 5 minutes without readings."
+        "reading before a gap of more than 15 minutes without readings (shorter gaps are the API reconnecting to "
+        "the Bluetti)."
     ),
 )
 async def list_blackouts(
