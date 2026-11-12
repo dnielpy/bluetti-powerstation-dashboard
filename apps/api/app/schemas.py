@@ -79,3 +79,9 @@ class BatteryEstimateOut(BaseModel):
     eta_latest: datetime | None
     hours_left: float | None
     model: DrainModelOut
+
+
+class PowerPeriodOut(BaseModel):
+    start: datetime
+    end: datetime
+    receiving_ac: bool

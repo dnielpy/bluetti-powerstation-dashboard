@@ -181,3 +181,24 @@ export async function getBatteryEstimate(): Promise<BatteryEstimate> {
 
   return response.json();
 }
+
+export type PowerPeriod = { start: string; end: string; receiving_ac: boolean };
+
+export type PowerPeriodsResult = { periods: PowerPeriod[]; fetchedAt: number };
+
+export async function getPowerPeriods(hours: number): Promise<PowerPeriodsResult> {
+  await connection();
+  const fetchedAt = Date.now();
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(`/power-periods?hours=${hours}`));
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return { periods: await response.json(), fetchedAt };
+}

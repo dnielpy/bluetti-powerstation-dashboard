@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import battery_estimate, blackouts, power_status, summaries
+from app import battery_estimate, blackouts, power_periods, power_status, summaries
 from app.db import get_session
 from app.models import Summary
 from app.schemas import (
@@ -13,6 +13,7 @@ from app.schemas import (
     BlackoutOut,
     DrainModelOut,
     PeriodOut,
+    PowerPeriodOut,
     PowerStatusOut,
     SummaryOut,
     SummaryPage,
@@ -62,6 +63,26 @@ async def battery_status(
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
     rows = await summaries.list_battery_status(session, since)
     return [BatteryStatusPoint.model_validate(row) for row in rows]
+
+
+@router.get(
+    "/power-periods",
+    response_model=list[PowerPeriodOut],
+    description=(
+        "Periods with (`receiving_ac: true`) and without AC power in the last `hours`, oldest first. A period lasts "
+        "until the first reading of the other state; gaps of more than 15 minutes without readings belong to neither."
+    ),
+)
+async def list_power_periods(
+    hours: float = Query(24, gt=0, le=168, description="How many hours back to include."),
+    session: AsyncSession = Depends(get_session),
+) -> list[PowerPeriodOut]:
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    rows = await summaries.list_ac_states(session, since)
+    return [
+        PowerPeriodOut(start=period.start, end=period.end, receiving_ac=period.receiving_ac)
+        for period in power_periods.find_power_periods((row.date, row.ac) for row in rows)
+    ]
 
 
 @router.get(
