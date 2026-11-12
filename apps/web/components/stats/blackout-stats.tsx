@@ -38,6 +38,7 @@ export async function BlackoutStats({ searchParams }: { searchParams: SearchPara
           ranges={TIME_RANGES}
           selected={range}
           searchParams={params}
+          path="/blackouts"
         />
       }
     >
