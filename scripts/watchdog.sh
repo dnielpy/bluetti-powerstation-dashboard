@@ -87,8 +87,22 @@ now=$(date +%s)
 
 age=$(latest_reading_age)
 
-if [ "$age" != unknown ] && [ "$age" -le "$STALE_SECONDS" ]; then
-    if [ "$level" -gt 0 ]; then
+# An unreachable API (for example during a deployment) only counts once it has been down for as long as the limit
+if [ "$age" = unknown ]; then
+    if [ ! -f "$STATE_DIR/unreachable_since" ] && [ "$DRY_RUN" != 1 ]; then
+        echo "$now" > "$STATE_DIR/unreachable_since"
+    fi
+    unreachable_since=$(cat "$STATE_DIR/unreachable_since" 2>/dev/null || echo "$now")
+    age=$(( now - unreachable_since ))
+    log "API not answering for ${age}s"
+    reachable=0
+else
+    rm -f "$STATE_DIR/unreachable_since"
+    reachable=1
+fi
+
+if [ "$age" -le "$STALE_SECONDS" ]; then
+    if [ "$reachable" = 1 ] && [ "$level" -gt 0 ]; then
         log "readings are back (last one ${age}s ago) after step $level"
         echo 0 > "$STATE_DIR/level"
     fi
