@@ -91,6 +91,24 @@ To update a running deployment later, run `./scripts/update.sh`: it stops the co
 - Containers restart automatically, have health checks and rotate their logs (3 × 10 MB).
 - Build the images on the host itself (or with `docker buildx --platform linux/arm64` for a Raspberry Pi).
 
+### Bluetooth watchdog
+
+The Bluetooth connection sometimes hangs: BlueZ stays connected to the Bluetti but no data arrives, so the API stops saving readings. `scripts/watchdog.sh` checks the latest reading every minute and, when it is older than 3 minutes, tries one step at a time, waiting 3 minutes between steps:
+
+1. Drop the Bluetti's Bluetooth connection and restart the API.
+2. Restart the Bluetooth service and the API.
+3. Power cycle the Bluetooth adapter, then restart the Bluetooth service and the API. If readings still don't come back (for example the Bluetti is off), step 3 repeats every 15 minutes.
+
+Install it once on the host, it starts on boot:
+
+```bash
+sudo ./scripts/install-watchdog.sh
+journalctl -u bluetti-watchdog -f                 # what it did
+sudo WATCHDOG_DRY_RUN=1 ./scripts/watchdog.sh     # what it would do now, without doing it
+```
+
+The limits can be changed with `WATCHDOG_STALE_SECONDS`, `WATCHDOG_COOLDOWN_SECONDS` and `WATCHDOG_GIVE_UP_COOLDOWN_SECONDS`.
+
 ### Slow or unstable connections
 
 Dependency downloads retry instead of failing on a dropped connection:
