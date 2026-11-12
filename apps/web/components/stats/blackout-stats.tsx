@@ -5,13 +5,13 @@ import { RangeFilter } from "@/components/stats/range-filter";
 import { StatusMessage } from "@/components/status-message";
 import { ApiUnavailableError, type Blackout, getBlackouts } from "@/lib/api";
 import { formatDuration } from "@/lib/blackout-format";
-import { BLACKOUT_RANGES, parseTimeRange } from "@/lib/time-ranges";
+import { TIME_RANGES, parseTimeRange } from "@/lib/time-ranges";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export async function BlackoutStats({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const range = parseTimeRange(params.blackoutHours, BLACKOUT_RANGES);
+  const range = parseTimeRange(params.blackoutHours, TIME_RANGES);
 
   let blackouts: Blackout[];
   try {
@@ -35,7 +35,7 @@ export async function BlackoutStats({ searchParams }: { searchParams: SearchPara
         <RangeFilter
           label="Blackouts time range"
           param="blackoutHours"
-          ranges={BLACKOUT_RANGES}
+          ranges={TIME_RANGES}
           selected={range}
           searchParams={params}
         />

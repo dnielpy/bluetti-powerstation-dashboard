@@ -5,14 +5,14 @@ import { RangeFilter } from "@/components/stats/range-filter";
 import { TrendLegend } from "@/components/stats/trend-legend";
 import { StatusMessage } from "@/components/status-message";
 import { ApiUnavailableError, type BatteryStatus, getBatteryStatus } from "@/lib/api";
-import { BATTERY_RANGES, parseTimeRange } from "@/lib/time-ranges";
+import { TIME_RANGES, parseTimeRange } from "@/lib/time-ranges";
 import { buildAverageRows, buildTimeSeries } from "@/lib/time-series";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export async function BatteryStats({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const range = parseTimeRange(params.hours, BATTERY_RANGES);
+  const range = parseTimeRange(params.hours, TIME_RANGES);
 
   let status: BatteryStatus;
   try {
@@ -37,7 +37,7 @@ export async function BatteryStats({ searchParams }: { searchParams: SearchParam
         <RangeFilter
           label="Battery level time range"
           param="hours"
-          ranges={BATTERY_RANGES}
+          ranges={TIME_RANGES}
           selected={range}
           searchParams={params}
         />

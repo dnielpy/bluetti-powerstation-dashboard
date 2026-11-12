@@ -5,14 +5,14 @@ import { RangeFilter } from "@/components/stats/range-filter";
 import { StatusMessage } from "@/components/status-message";
 import { type AcOutputHistory, ApiUnavailableError, getAcOutputHistory } from "@/lib/api";
 import { energyWh, formatEnergy } from "@/lib/power-stats";
-import { AC_OUTPUT_RANGES, parseTimeRange } from "@/lib/time-ranges";
+import { TIME_RANGES, parseTimeRange } from "@/lib/time-ranges";
 import { buildAverageRows, buildTimeSeries } from "@/lib/time-series";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export async function PowerStats({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const range = parseTimeRange(params.acHours, AC_OUTPUT_RANGES);
+  const range = parseTimeRange(params.acHours, TIME_RANGES);
 
   let history: AcOutputHistory;
   try {
@@ -40,7 +40,7 @@ export async function PowerStats({ searchParams }: { searchParams: SearchParams 
         <RangeFilter
           label="AC output time range"
           param="acHours"
-          ranges={AC_OUTPUT_RANGES}
+          ranges={TIME_RANGES}
           selected={range}
           searchParams={params}
         />
