@@ -4,9 +4,19 @@ export type Trend = "up" | "down";
 
 export type TrendRun = { trend: Trend; points: SeriesPoint[] };
 
+/** The direction of the first change, so a flat start is not taken as charging without any sign of it. */
+function firstTrend(points: SeriesPoint[]): Trend {
+  for (let index = 1; index < points.length; index++) {
+    if (points[index].value > points[index - 1].value) return "up";
+    if (points[index].value < points[index - 1].value) return "down";
+  }
+  // A level that never moves gives no sign of charging
+  return "down";
+}
+
 export function pointTrends(points: SeriesPoint[]): Trend[] {
   const trends: Trend[] = [];
-  let current: Trend = "up";
+  let current = firstTrend(points);
   points.forEach((point, index) => {
     const previous = points[index - 1];
     if (previous && point.value > previous.value) current = "up";
