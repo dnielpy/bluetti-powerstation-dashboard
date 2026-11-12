@@ -85,3 +85,12 @@ class PowerPeriodOut(BaseModel):
     start: datetime
     end: datetime
     receiving_ac: bool
+
+
+class PowerTotalsOut(BaseModel):
+    since: datetime | None
+    with_power_hours: float
+    without_power_hours: float
+    receiving_ac: bool | None
+    last_outage_start: datetime | None
+    outage_ongoing: bool

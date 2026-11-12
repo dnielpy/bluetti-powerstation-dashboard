@@ -34,3 +34,28 @@ def find_power_periods(readings: Iterable[tuple[datetime, bool]], max_gap=MAX_RE
         periods.append(current)
 
     return [period for period in periods if period.end > period.start]
+
+
+@dataclass
+class PowerTotals:
+    since: datetime | None
+    with_power_hours: float
+    without_power_hours: float
+    receiving_ac: bool | None
+    last_outage_start: datetime | None
+    outage_ongoing: bool
+
+
+def power_totals(periods: list[PowerPeriod]) -> PowerTotals:
+    """Hours with and without AC power over all the periods, the current state and when the power last went out."""
+    with_power = sum(((p.end - p.start).total_seconds() for p in periods if p.receiving_ac), 0.0)
+    without_power = sum(((p.end - p.start).total_seconds() for p in periods if not p.receiving_ac), 0.0)
+    outages = [p for p in periods if not p.receiving_ac]
+    return PowerTotals(
+        since=periods[0].start if periods else None,
+        with_power_hours=round(with_power / 3600, 3),
+        without_power_hours=round(without_power / 3600, 3),
+        receiving_ac=periods[-1].receiving_ac if periods else None,
+        last_outage_start=outages[-1].start if outages else None,
+        outage_ongoing=bool(periods) and not periods[-1].receiving_ac,
+    )

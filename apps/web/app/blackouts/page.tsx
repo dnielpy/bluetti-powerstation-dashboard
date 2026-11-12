@@ -17,7 +17,7 @@ export default function BlackoutsPage({ searchParams }: PageProps<"/blackouts">)
     <main className="flex flex-1 flex-col gap-4 px-4 py-6 md:px-6">
       <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Blackouts</h1>
       <Suspense fallback={<ChartCardSkeleton height={190} />}>
-        <PowerHoursCard searchParams={searchParams} />
+        <PowerHoursCard />
       </Suspense>
       <Suspense fallback={<ChartCardSkeleton height={300} />}>
         <PeriodRanking kind="blackout" searchParams={searchParams} />

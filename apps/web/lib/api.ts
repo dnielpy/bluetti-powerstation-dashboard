@@ -202,3 +202,28 @@ export async function getPowerPeriods(hours: number): Promise<PowerPeriodsResult
 
   return { periods: await response.json(), fetchedAt };
 }
+
+export type PowerTotals = {
+  since: string | null;
+  with_power_hours: number;
+  without_power_hours: number;
+  receiving_ac: boolean | null;
+  last_outage_start: string | null;
+  outage_ongoing: boolean;
+};
+
+export async function getPowerTotals(): Promise<PowerTotals> {
+  await connection();
+  let response: Response;
+  try {
+    response = await fetch(apiUrl("/power-totals"));
+  } catch (error) {
+    throw new ApiUnavailableError("Could not reach the API", { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new ApiUnavailableError(`API responded with ${response.status}`);
+  }
+
+  return response.json();
+}

@@ -1,28 +1,38 @@
 import { ChartCard } from "@/components/stats/chart-card";
-import { RangeFilter } from "@/components/stats/range-filter";
 import { StatusTile } from "@/components/stats/status-tile";
 import { StatusMessage } from "@/components/status-message";
-import { ApiUnavailableError, getPowerPeriods, type PowerPeriodsResult } from "@/lib/api";
-import { formatElapsed } from "@/lib/blackout-format";
-import { powerTotals, toSpans } from "@/lib/power-periods";
-import { TIME_RANGES, parseTimeRange } from "@/lib/time-ranges";
-
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+import { ApiUnavailableError, getPowerTotals, type PowerTotals } from "@/lib/api";
+import { formatDateTime, formatElapsed } from "@/lib/blackout-format";
 
 const HOUR_MS = 3_600_000;
+
+const timeFormat = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
+const dayFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+
+/** When the power last went out, and whether it is still out. */
+function lastOutage(totals: PowerTotals) {
+  if (!totals.last_outage_start) return undefined;
+  const start = new Date(totals.last_outage_start);
+  return {
+    label: "Power went out",
+    value: timeFormat.format(start),
+    detail: `${dayFormat.format(start)}${totals.outage_ongoing ? " · still out" : ""}`,
+  };
+}
+
+function hoursValue(hours: number): string {
+  return hours > 0 ? formatElapsed(hours * HOUR_MS) : "None";
+}
 
 function share(part: number, whole: number): string {
   return `${whole > 0 ? Math.round((part / whole) * 100) : 0}% of the time`;
 }
 
-/** How many hours of the range were in a blackout and how many with power. */
-export async function PowerHoursCard({ searchParams }: { searchParams: SearchParams }) {
-  const params = await searchParams;
-  const range = parseTimeRange(params.powerHours, TIME_RANGES);
-
-  let result: PowerPeriodsResult;
+/** Hours in a blackout and with power since the first reading. */
+export async function PowerHoursCard() {
+  let totals: PowerTotals;
   try {
-    result = await getPowerPeriods(range.hours);
+    totals = await getPowerTotals();
   } catch (error) {
     if (error instanceof ApiUnavailableError) {
       return <StatusMessage title="API unavailable" body="Could not load data from the API. Make sure it is running." />;
@@ -30,41 +40,32 @@ export async function PowerHoursCard({ searchParams }: { searchParams: SearchPar
     throw error;
   }
 
-  const to = result.fetchedAt;
-  const { withPowerMs, withoutPowerMs } = powerTotals(toSpans(result.periods, to - range.hours * HOUR_MS, to));
-  const recordedMs = withPowerMs + withoutPowerMs;
+  const recorded = totals.with_power_hours + totals.without_power_hours;
 
   return (
     <ChartCard
       id="power-hours-title"
       title="Power status"
-      subtitle={range.description}
-      actions={
-        <RangeFilter
-          label="Power status time range"
-          param="powerHours"
-          ranges={TIME_RANGES}
-          selected={range}
-          searchParams={params}
-          path="/blackouts"
-        />
-      }
+      subtitle={totals.since ? `Since ${formatDateTime(totals.since)}` : "No readings yet"}
     >
-      {recordedMs === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No readings in this period.</p>
+      {recorded === 0 ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">The totals will appear once the API stores readings.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           <StatusTile
             tone="red"
             label="Hours in blackout"
-            value={withoutPowerMs ? formatElapsed(withoutPowerMs) : "None"}
-            detail={share(withoutPowerMs, recordedMs)}
+            value={hoursValue(totals.without_power_hours)}
+            detail={share(totals.without_power_hours, recorded)}
+            aside={lastOutage(totals)}
+            live={totals.receiving_ac === false}
           />
           <StatusTile
             tone="green"
             label="Hours with power"
-            value={withPowerMs ? formatElapsed(withPowerMs) : "None"}
-            detail={share(withPowerMs, recordedMs)}
+            value={hoursValue(totals.with_power_hours)}
+            detail={share(totals.with_power_hours, recorded)}
+            live={totals.receiving_ac === true}
           />
         </div>
       )}

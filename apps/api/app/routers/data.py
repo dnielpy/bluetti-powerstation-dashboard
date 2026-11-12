@@ -14,6 +14,7 @@ from app.schemas import (
     DrainModelOut,
     PeriodOut,
     PowerPeriodOut,
+    PowerTotalsOut,
     PowerStatusOut,
     SummaryOut,
     SummaryPage,
@@ -85,6 +86,21 @@ async def list_power_periods(
         PowerPeriodOut(start=period.start, end=period.end, receiving_ac=period.receiving_ac)
         for period in power_periods.find_power_periods((row.date, row.ac) for row in rows)
     ]
+
+
+@router.get(
+    "/power-totals",
+    response_model=PowerTotalsOut,
+    description=(
+        "Hours with and without AC power since the first reading (`since`), filling gaps without readings like "
+        "`/power-periods`; whether AC power is on now, and when the power last went out (`outage_ongoing` while it "
+        "is still out)."
+    ),
+)
+async def get_power_totals(session: AsyncSession = Depends(get_session)) -> PowerTotalsOut:
+    rows = await summaries.list_ac_states(session, None)
+    totals = power_periods.power_totals(power_periods.find_power_periods((row.date, row.ac) for row in rows))
+    return PowerTotalsOut(**vars(totals))
 
 
 @router.get(

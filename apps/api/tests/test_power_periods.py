@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from app import summaries
 from app.main import app
 from app.models import Summary
-from app.power_periods import find_power_periods
+from app.power_periods import find_power_periods, power_totals
 from tests.test_data import use_rows  # noqa: F401
 
 client = TestClient(app)
@@ -65,3 +65,42 @@ def test_power_periods_endpoint(use_rows, monkeypatch: pytest.MonkeyPatch) -> No
         {"start": "2026-11-11T00:00:00Z", "end": "2026-11-11T00:10:00Z", "receiving_ac": True},
         {"start": "2026-11-11T00:10:00Z", "end": "2026-11-11T00:20:00Z", "receiving_ac": False},
     ]
+
+
+def test_power_totals() -> None:
+    periods = find_power_periods([_at(0, True), _at(30, False), _at(90, False)])
+
+    totals = power_totals(periods)
+
+    # 30 minutes without readings between the states: the power went out halfway, at minute 15
+    assert (totals.with_power_hours, totals.without_power_hours) == (0.25, 1.25)
+    assert (totals.since, totals.receiving_ac, totals.outage_ongoing) == (T0, False, True)
+    assert totals.last_outage_start == T0 + timedelta(minutes=15)
+
+
+def test_power_totals_without_readings() -> None:
+    totals = power_totals([])
+
+    assert (totals.since, totals.receiving_ac, totals.last_outage_start, totals.outage_ongoing) == (None, None, None, False)
+
+
+def test_power_totals_endpoint_reads_every_reading(use_rows, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    use_rows({})
+    calls = []
+
+    async def fake_list_ac_states(session, since):
+        calls.append(since)
+        return [Summary(date=T0, ac=False), Summary(date=T0 + timedelta(minutes=30), ac=True), Summary(date=T0 + timedelta(hours=1), ac=True)]
+
+    monkeypatch.setattr(summaries, "list_ac_states", fake_list_ac_states)
+
+    body = client.get("/power-totals").json()
+
+    assert calls == [None]
+    # Power came back halfway through the first 30 minutes without readings
+    assert (body["with_power_hours"], body["without_power_hours"], body["receiving_ac"], body["outage_ongoing"]) == (
+        0.75,
+        0.25,
+        True,
+        False,
+    )

@@ -1,10 +1,6 @@
 import type { Blackout } from "@/lib/api";
 import { BLACKOUT_COLOR, formatDateTime, formatDuration, formatTick, hourTicks } from "@/lib/blackout-format";
 
-// Past this share of the axis the duration is written inside the bar; sooner for the longer "ongoing" label
-const LABEL_INSIDE_FROM = 0.75;
-const ONGOING_LABEL_INSIDE_FROM = 0.55;
-
 function ongoingTexture(color: string): string {
   return `repeating-linear-gradient(45deg, ${color} 0 6px, color-mix(in srgb, ${color} 70%, white) 6px 9px)`;
 }
@@ -32,7 +28,8 @@ export function BlackoutChart({ blackouts, color = BLACKOUT_COLOR, label = "Blac
       </ul>
 
       <div className="relative min-w-0 flex-1">
-        <div className="relative mr-14">
+        {/* Room after the axis for the label of the longest bar, wider when it can read "· ongoing" */}
+        <div className={`relative ${blackouts.some((blackout) => blackout.ongoing) ? "mr-28" : "mr-14"}`}>
           {ticks.map((tick) => (
             <span
               key={tick}
@@ -59,24 +56,13 @@ export function BlackoutChart({ blackouts, color = BLACKOUT_COLOR, label = "Blac
                     background: blackout.ongoing ? ongoingTexture(color) : color,
                   }}
                 />
-                {blackout.duration_hours / top > (blackout.ongoing ? ONGOING_LABEL_INSIDE_FROM : LABEL_INSIDE_FROM) ? (
-                  // A bar this long leaves no room after it on narrow screens, so its label goes inside
-                  <span
-                    className="absolute pr-2 font-medium whitespace-nowrap tabular-nums text-white"
-                    style={{ right: `calc(100% - ${percent(blackout.duration_hours)})` }}
-                  >
-                    {formatDuration(blackout.duration_hours)}
-                    {blackout.ongoing && <span className="font-normal text-white/80"> · ongoing</span>}
-                  </span>
-                ) : (
-                  <span
-                    className="absolute pl-1.5 font-medium whitespace-nowrap tabular-nums text-zinc-900 dark:text-zinc-50"
-                    style={{ left: percent(blackout.duration_hours) }}
-                  >
-                    {formatDuration(blackout.duration_hours)}
-                    {blackout.ongoing && <span className="font-normal text-zinc-500 dark:text-zinc-400"> · ongoing</span>}
-                  </span>
-                )}
+                <span
+                  className="absolute pl-1.5 font-medium whitespace-nowrap tabular-nums text-zinc-900 dark:text-zinc-50"
+                  style={{ left: percent(blackout.duration_hours) }}
+                >
+                  {formatDuration(blackout.duration_hours)}
+                  {blackout.ongoing && <span className="font-normal text-zinc-500 dark:text-zinc-400"> · ongoing</span>}
+                </span>
 
                 <span className="pointer-events-none invisible absolute bottom-full left-0 z-10 mb-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-sm group-hover:visible group-focus-visible:visible dark:border-zinc-700 dark:bg-zinc-800">
                   <span className="flex items-center gap-2">

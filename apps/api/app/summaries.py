@@ -64,12 +64,11 @@ async def list_ac_output(session: AsyncSession, since: datetime) -> Sequence[Row
     return (await session.execute(query)).all()
 
 
-async def list_ac_states(session: AsyncSession, since: datetime) -> Sequence[Row]:
-    query = (
-        select(Summary.date, Summary.ac)
-        .where(Summary.date >= since)
-        .order_by(Summary.date.asc(), Summary.id.asc())
-    )
+async def list_ac_states(session: AsyncSession, since: datetime | None) -> Sequence[Row]:
+    """Date and AC state of every reading since a date, or of all of them."""
+    query = select(Summary.date, Summary.ac).order_by(Summary.date.asc(), Summary.id.asc())
+    if since is not None:
+        query = query.where(Summary.date >= since)
     return (await session.execute(query)).all()
 
 
