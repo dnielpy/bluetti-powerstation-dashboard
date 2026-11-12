@@ -6,7 +6,7 @@ import { TrendLegend } from "@/components/stats/trend-legend";
 import { StatusMessage } from "@/components/status-message";
 import { ApiUnavailableError, type BatteryStatus, getBatteryStatus } from "@/lib/api";
 import { TIME_RANGES, parseTimeRange } from "@/lib/time-ranges";
-import { buildAverageRows, buildTimeSeries } from "@/lib/time-series";
+import { buildAverageRows, buildTimeSeries, fillGaps } from "@/lib/time-series";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -25,7 +25,7 @@ export async function BatteryStats({ searchParams }: { searchParams: SearchParam
   }
 
   const { readings, fetchedAt } = status;
-  const samples = readings.map((reading) => ({ date: reading.date, value: reading.battery_percent }));
+  const samples = fillGaps(readings.map((reading) => ({ date: reading.date, value: reading.battery_percent })));
   const series = buildTimeSeries(samples, range.hours, fetchedAt);
 
   return (

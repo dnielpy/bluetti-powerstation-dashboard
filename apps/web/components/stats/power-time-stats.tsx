@@ -69,7 +69,7 @@ export async function PowerTimeStats({ kind, searchParams }: { kind: keyof typeo
     <ChartCard
       id={`${kind}-time-title`}
       title={config.title}
-      subtitle={`${range.description} · ${formatDuration(coveredHours)} with readings`}
+      subtitle={`${range.description} · ${formatDuration(coveredHours)} recorded`}
       actions={
         <RangeFilter
           label={`${config.title} time range`}
@@ -92,7 +92,7 @@ export async function PowerTimeStats({ kind, searchParams }: { kind: keyof typeo
               tone={config.tone}
               label={config.tile}
               value={formatDuration(stateHours)}
-              detail={`${percent(stateHours, coveredHours)}% of the time with readings`}
+              detail={`${percent(stateHours, coveredHours)}% of the recorded time`}
             />
           </div>
 

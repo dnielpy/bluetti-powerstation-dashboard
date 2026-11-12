@@ -33,6 +33,34 @@ function bucketAverages(samples: Sample[], from: number, bucketMs: number): Seri
     }));
 }
 
+// Readings come every few seconds; a longer gap is the API losing the Bluetti, and gets filled in
+const FILL_GAP_MS = 60_000;
+const FILL_STEP_MS = 60_000;
+
+/**
+ * Fills gaps without readings with values on the straight line between the readings around them, one per minute,
+ * so a drop from 90 to 80 across a gap is spread evenly over it. Charts, averages and energy then have no holes.
+ */
+export function fillGaps(samples: Sample[]): Sample[] {
+  const filled: Sample[] = [];
+  for (let index = 0; index < samples.length; index++) {
+    const sample = samples[index];
+    const previous = samples[index - 1];
+    if (previous) {
+      const start = Date.parse(previous.date);
+      const end = Date.parse(sample.date);
+      if (end - start > FILL_GAP_MS) {
+        for (let t = start + FILL_STEP_MS; t < end; t += FILL_STEP_MS) {
+          const fraction = (t - start) / (end - start);
+          filled.push({ date: new Date(t).toISOString(), value: previous.value + (sample.value - previous.value) * fraction });
+        }
+      }
+    }
+    filled.push(sample);
+  }
+  return filled;
+}
+
 export function buildTimeSeries(samples: Sample[], hours: number, now: number): TimeSeries {
   const to = now;
   const from = now - hours * HOUR_MS;

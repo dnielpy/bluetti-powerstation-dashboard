@@ -69,8 +69,10 @@ async def battery_status(
     "/power-periods",
     response_model=list[PowerPeriodOut],
     description=(
-        "Periods with (`receiving_ac: true`) and without AC power in the last `hours`, oldest first. A period lasts "
-        "until the first reading of the other state; gaps of more than 15 minutes without readings belong to neither."
+        "Periods with (`receiving_ac: true`) and without AC power in the last `hours`, oldest first, back to back. A "
+        "period lasts until the first reading of the other state; across a gap of more than 15 minutes without "
+        "readings the change is placed halfway through the gap, and a gap with the same state on both sides belongs "
+        "to that period."
     ),
 )
 async def list_power_periods(
@@ -90,9 +92,9 @@ async def list_power_periods(
     response_model=list[BlackoutOut],
     description=(
         "Blackouts in the last `hours`, oldest first. A blackout is a run of readings where the Bluetti "
-        "is not receiving AC power. It ends with the first reading that has AC power again, or at the last "
-        "reading before a gap of more than 15 minutes without readings (shorter gaps are the API reconnecting to "
-        "the Bluetti)."
+        "is not receiving AC power. It ends with the first reading that has AC power again. Gaps without readings "
+        "never split a blackout; when power is back after a gap of more than 15 minutes, the blackout ends halfway "
+        "through the gap (and one that starts after such a gap starts halfway through it)."
     ),
 )
 async def list_blackouts(

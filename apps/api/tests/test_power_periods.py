@@ -34,10 +34,16 @@ def test_reconnection_gap_keeps_the_period() -> None:
     assert _spans(find_power_periods(readings)) == [(0, 20, False), (20, 21, True)]
 
 
-def test_long_gap_counts_as_neither() -> None:
-    readings = [_at(0, True), _at(5, True), _at(60, True), _at(70, False)]
+def test_long_gap_is_filled_by_the_state_on_both_sides() -> None:
+    readings = [_at(0, True), _at(5, True), _at(60, True), _at(61, True)]
 
-    assert _spans(find_power_periods(readings)) == [(0, 5, True), (60, 70, True)]
+    assert _spans(find_power_periods(readings)) == [(0, 61, True)]
+
+
+def test_long_gap_between_states_changes_halfway() -> None:
+    readings = [_at(0, True), _at(5, True), _at(65, False), _at(70, False)]
+
+    assert _spans(find_power_periods(readings)) == [(0, 35, True), (35, 70, False)]
 
 
 def test_power_periods_endpoint(use_rows, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811

@@ -6,7 +6,7 @@ import { StatusMessage } from "@/components/status-message";
 import { type AcOutputHistory, ApiUnavailableError, getAcOutputHistory } from "@/lib/api";
 import { energyWh, formatEnergy } from "@/lib/power-stats";
 import { TIME_RANGES, parseTimeRange } from "@/lib/time-ranges";
-import { buildAverageRows, buildTimeSeries } from "@/lib/time-series";
+import { buildAverageRows, buildTimeSeries, fillGaps } from "@/lib/time-series";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -25,7 +25,7 @@ export async function PowerStats({ searchParams }: { searchParams: SearchParams 
   }
 
   const { readings, fetchedAt } = history;
-  const samples = readings.map((reading) => ({ date: reading.date, value: reading.ac_output }));
+  const samples = fillGaps(readings.map((reading) => ({ date: reading.date, value: reading.ac_output })));
   const peak = Math.max(0, ...readings.map((reading) => reading.ac_output));
   const summary = readings.length
     ? `${range.description} · ${formatEnergy(energyWh(samples))} used · peak ${peak} W`

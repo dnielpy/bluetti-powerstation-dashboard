@@ -46,32 +46,36 @@ def test_blackout_still_running_is_ongoing() -> None:
     assert blackout.end == T0 + timedelta(seconds=14)
 
 
-def test_gap_without_readings_closes_the_blackout_at_the_last_reading() -> None:
-    readings = [(T0, False), (T0 + timedelta(minutes=1), False), (T0 + timedelta(hours=2), False)]
-
-    result = find_blackouts(readings)
-
-    assert [(b.start, b.end, b.ongoing) for b in result] == [
-        (T0, T0 + timedelta(minutes=1), False),
-        (T0 + timedelta(hours=2), T0 + timedelta(hours=2), True),
-    ]
-
-
-def test_reconnection_gap_keeps_the_same_blackout() -> None:
-    readings = [(T0, False), (T0 + timedelta(minutes=13), False), (T0 + timedelta(minutes=24), False)]
+def test_gap_without_readings_keeps_the_blackout() -> None:
+    readings = [(T0, False), (T0 + timedelta(minutes=13), False), (T0 + timedelta(hours=2), False)]
 
     [blackout] = find_blackouts(readings)
 
-    assert (blackout.start, blackout.end, blackout.ongoing) == (T0, T0 + timedelta(minutes=24), True)
+    assert (blackout.start, blackout.end, blackout.ongoing) == (T0, T0 + timedelta(hours=2), True)
 
 
-def test_gap_longer_than_15_minutes_splits_the_blackout() -> None:
-    readings = [(T0, False), (T0 + timedelta(minutes=16), False)]
+def test_power_back_after_a_long_gap_ends_the_blackout_halfway() -> None:
+    readings = [(T0, False), (T0 + timedelta(hours=2), True)]
 
-    assert [(b.start, b.end, b.ongoing) for b in find_blackouts(readings)] == [
-        (T0, T0, False),
-        (T0 + timedelta(minutes=16), T0 + timedelta(minutes=16), True),
-    ]
+    [blackout] = find_blackouts(readings)
+
+    assert (blackout.start, blackout.end, blackout.ongoing) == (T0, T0 + timedelta(hours=1), False)
+
+
+def test_blackout_after_a_long_gap_starts_halfway() -> None:
+    readings = [(T0, True), (T0 + timedelta(hours=2), False), (T0 + timedelta(hours=3), False)]
+
+    [blackout] = find_blackouts(readings)
+
+    assert (blackout.start, blackout.end) == (T0 + timedelta(hours=1), T0 + timedelta(hours=3))
+
+
+def test_short_gap_changes_state_at_the_new_reading() -> None:
+    readings = [(T0, False), (T0 + timedelta(minutes=10), True)]
+
+    [blackout] = find_blackouts(readings)
+
+    assert blackout.end == T0 + timedelta(minutes=10)
 
 
 def test_duration_hours() -> None:
@@ -101,9 +105,10 @@ def test_blackouts_endpoint(use_rows, monkeypatch: pytest.MonkeyPatch) -> None: 
     assert response.status_code == 200
     assert response.json() == [
         {
-            "start": "2026-11-11T01:00:00Z",
+            # An hour without readings between power and the blackout: it started halfway
+            "start": "2026-11-11T00:30:00Z",
             "end": "2026-11-11T01:06:00Z",
-            "duration_hours": 0.1,
+            "duration_hours": 0.6,
             "ongoing": False,
         }
     ]
