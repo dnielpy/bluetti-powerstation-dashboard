@@ -78,6 +78,8 @@ class BatteryEstimateOut(BaseModel):
     eta_earliest: datetime | None
     eta_latest: datetime | None
     hours_left: float | None
+    full_eta: datetime | None
+    hours_to_full: float | None
     model: DrainModelOut
 
 

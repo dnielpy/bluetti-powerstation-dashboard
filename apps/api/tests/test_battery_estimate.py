@@ -181,6 +181,55 @@ def test_estimate_without_readings() -> None:
     assert estimate([], NOMINAL, T0, 20).status == "no_data"
 
 
+def charging(minutes: int, start_percent: int, minutes_per_percent: int) -> list[R]:
+    """A reading every minute of a battery that gains a percent every `minutes_per_percent` minutes."""
+    return [
+        R(T0 + timedelta(minutes=m), start_percent + m // minutes_per_percent, ac_output=40, ac_input=300)
+        for m in range(minutes + 1)
+    ]
+
+
+def test_estimate_while_charging_reaches_full_at_the_charge_rate() -> None:
+    # 1 % every 6 minutes is 10 %/h; 55 % at the last reading leaves 45 %
+    rows = charging(30, 50, 6)
+
+    result = estimate(rows, NOMINAL, rows[-1].date, 20)
+
+    assert result.status == "charging"
+    assert result.eta is None
+    assert result.hours_to_full == pytest.approx(4.5, abs=0.01)
+
+
+def test_estimate_while_charging_needs_two_rises() -> None:
+    rows = charging(8, 50, 6)
+
+    result = estimate(rows, NOMINAL, rows[-1].date, 20)
+
+    assert result.status == "charging"
+    assert result.full_eta is None
+
+
+def test_charge_rate_only_counts_the_current_charge() -> None:
+    # A fast charge, a reading without input and then a slower one: only the slow one counts
+    fast = charging(20, 40, 2)
+    pause = R(fast[-1].date + timedelta(minutes=1), fast[-1].battery_percent, ac_output=40)
+    slow = [
+        R(pause.date + timedelta(minutes=1 + m), pause.battery_percent + m // 6, ac_output=40, ac_input=300)
+        for m in range(31)
+    ]
+
+    assert battery_estimate.charge_rate([*fast, pause, *slow]) == pytest.approx(10)
+
+
+def test_estimate_when_full_has_no_full_eta() -> None:
+    rows = charging(30, 95, 6)
+
+    result = estimate(rows, NOMINAL, rows[-1].date, 20)
+
+    assert result.soc == 100
+    assert result.full_eta is None
+
+
 def test_battery_estimate_endpoint(use_rows, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
     use_rows({})
 
@@ -194,4 +243,5 @@ def test_battery_estimate_endpoint(use_rows, monkeypatch: pytest.MonkeyPatch) ->
     assert body["status"] == "discharging"
     assert body["load_w"] == 45
     assert body["hours_left"] == pytest.approx(8, abs=0.01)
+    assert body["full_eta"] is None
     assert body["model"] == {"wh_per_percent": 10.0, "idle_w": 5.0, "steps_used": 10, "from_history": True}

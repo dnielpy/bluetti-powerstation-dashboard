@@ -164,6 +164,8 @@ export type BatteryEstimate = {
   eta_earliest: string | null;
   eta_latest: string | null;
   hours_left: number | null;
+  full_eta: string | null;
+  hours_to_full: number | null;
   model: { wh_per_percent: number; idle_w: number; steps_used: number; from_history: boolean };
 };
 

@@ -1,4 +1,5 @@
-"""Estimates when the battery reaches the reserve level (20 % by default) at the current load.
+"""Estimates when the battery reaches the reserve level (20 % by default) at the current load, and when it is full
+while it charges.
 
 The battery percentage is an integer and the battery drains faster than the output power alone explains (inverter
 losses, idle draw), so the drain rate is learned from past discharges: every 1 % step down tells how fast the battery
@@ -198,6 +199,28 @@ def _since_last_change(rows: Sequence[Row]) -> timedelta:
     return timedelta(0)
 
 
+def charge_rate(rows: Sequence[Row]) -> float | None:
+    """%/h the battery gained in the charge that is going on: from its first rise of the percentage to its last one.
+    None when the latest reading is not charging or the charge has not risen twice yet. A gap in the readings or a
+    reading without input ends the charge, so only its trailing run counts."""
+    rises: list[Row] = []
+    previous: Row | None = None
+    for row in rows:
+        if previous is not None and (row.date - previous.date > MAX_READING_GAP or not _charging(row)):
+            rises = []
+        elif previous is not None and row.battery_percent > previous.battery_percent:
+            rises.append(row)
+        previous = row
+
+    if previous is None or not _charging(previous) or len(rises) < 2:
+        return None
+    first, last = rises[0], rises[-1]
+    hours = (last.date - first.date).total_seconds() / 3600
+    if hours <= 0:
+        return None
+    return (last.battery_percent - first.battery_percent) / hours
+
+
 @dataclass
 class BatteryEstimate:
     computed_at: datetime
@@ -211,12 +234,19 @@ class BatteryEstimate:
     eta: datetime | None = None
     eta_earliest: datetime | None = None
     eta_latest: datetime | None = None
+    full_eta: datetime | None = None
 
     @property
     def hours_left(self) -> float | None:
         if self.eta is None:
             return None
         return round((self.eta - self.computed_at).total_seconds() / 3600, 3)
+
+    @property
+    def hours_to_full(self) -> float | None:
+        if self.full_eta is None:
+            return None
+        return round((self.full_eta - self.computed_at).total_seconds() / 3600, 3)
 
 
 def estimate(rows: Sequence[Row], model: DrainModel, now: datetime, reserve_percent: float) -> BatteryEstimate:
@@ -235,6 +265,12 @@ def estimate(rows: Sequence[Row], model: DrainModel, now: datetime, reserve_perc
 
     if _charging(latest):
         result.status = "charging"
+        rate = charge_rate(rows)
+        if rate is not None and rate > 0 and latest.battery_percent < 100:
+            progress = min(0.95, rate * _since_last_change(rows).total_seconds() / 3600)
+            hours = (100 - latest.battery_percent - progress) / rate
+            if hours <= MAX_HOURS:
+                result.full_eta = now + timedelta(hours=hours)
         return result
 
     drain = model.drain(load)

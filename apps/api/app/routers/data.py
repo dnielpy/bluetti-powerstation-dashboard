@@ -183,7 +183,8 @@ async def get_power_status(session: AsyncSession = Depends(get_session)) -> Powe
         "The load is the average of the last 10 seconds. The drain rate comes from a line fitted to the 1 % steps "
         "of the last 72 hours of discharge (drain = alpha * load + beta), pulled towards the nominal capacity while "
         "there is little history. `eta_earliest` and `eta_latest` spread the drain by how much past steps varied. "
-        "`status` is discharging, charging, reserve, idle (more than 48 h or no drain), stale or no_data."
+        "`status` is discharging, charging, reserve, idle (more than 48 h or no drain), stale or no_data. While "
+        "charging, `full_eta` is when the battery reaches 100 % at the rate the current charge has risen so far."
     ),
 )
 async def get_battery_estimate(session: AsyncSession = Depends(get_session)) -> BatteryEstimateOut:
@@ -201,6 +202,8 @@ async def get_battery_estimate(session: AsyncSession = Depends(get_session)) -> 
         eta_earliest=result.eta_earliest,
         eta_latest=result.eta_latest,
         hours_left=result.hours_left,
+        full_eta=result.full_eta,
+        hours_to_full=result.hours_to_full,
         model=DrainModelOut(
             wh_per_percent=round(model.wh_per_percent, 2),
             idle_w=round(model.idle_w, 1),
