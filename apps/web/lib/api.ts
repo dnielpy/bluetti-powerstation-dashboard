@@ -212,11 +212,11 @@ export type PowerTotals = {
   outage_ongoing: boolean;
 };
 
-export async function getPowerTotals(): Promise<PowerTotals> {
+export async function getPowerTotals(hours?: number): Promise<PowerTotals> {
   await connection();
   let response: Response;
   try {
-    response = await fetch(apiUrl("/power-totals"));
+    response = await fetch(apiUrl(hours ? `/power-totals?hours=${hours}` : "/power-totals"));
   } catch (error) {
     throw new ApiUnavailableError("Could not reach the API", { cause: error });
   }

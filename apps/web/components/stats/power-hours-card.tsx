@@ -2,9 +2,10 @@ import { ChartCard } from "@/components/stats/chart-card";
 import { StatusTile } from "@/components/stats/status-tile";
 import { StatusMessage } from "@/components/status-message";
 import { ApiUnavailableError, getPowerTotals, type PowerTotals } from "@/lib/api";
-import { formatDateTime, formatElapsed } from "@/lib/blackout-format";
+import { formatElapsed } from "@/lib/blackout-format";
 
 const HOUR_MS = 3_600_000;
+const WINDOW_HOURS = 24;
 
 const timeFormat = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 const dayFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
@@ -28,11 +29,11 @@ function share(part: number, whole: number): string {
   return `${whole > 0 ? Math.round((part / whole) * 100) : 0}% of the time`;
 }
 
-/** Hours in a blackout and with power since the first reading. */
+/** Hours in a blackout and with power in the last 24 hours. */
 export async function PowerHoursCard() {
   let totals: PowerTotals;
   try {
-    totals = await getPowerTotals();
+    totals = await getPowerTotals(WINDOW_HOURS);
   } catch (error) {
     if (error instanceof ApiUnavailableError) {
       return <StatusMessage title="API unavailable" body="Could not load data from the API. Make sure it is running." />;
@@ -46,7 +47,7 @@ export async function PowerHoursCard() {
     <ChartCard
       id="power-hours-title"
       title="Power status"
-      subtitle={totals.since ? `Since ${formatDateTime(totals.since)}` : "No readings yet"}
+      subtitle={totals.since ? `Last ${WINDOW_HOURS} hours` : "No readings yet"}
     >
       {recorded === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">The totals will appear once the API stores readings.</p>

@@ -78,6 +78,17 @@ def test_power_totals() -> None:
     assert totals.last_outage_start == T0 + timedelta(minutes=15)
 
 
+def test_power_totals_counts_only_the_window() -> None:
+    periods = find_power_periods([_at(0, False), _at(10, False), _at(20, True), _at(80, True)])
+
+    totals = power_totals(periods, since=T0 + timedelta(minutes=5))
+
+    assert (totals.with_power_hours, totals.without_power_hours) == (1.0, 0.25)
+    assert totals.since == T0 + timedelta(minutes=5)
+    # The last outage keeps its real start, before the window
+    assert totals.last_outage_start == T0
+
+
 def test_power_totals_without_readings() -> None:
     totals = power_totals([])
 

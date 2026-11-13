@@ -46,13 +46,19 @@ class PowerTotals:
     outage_ongoing: bool
 
 
-def power_totals(periods: list[PowerPeriod]) -> PowerTotals:
-    """Hours with and without AC power over all the periods, the current state and when the power last went out."""
-    with_power = sum(((p.end - p.start).total_seconds() for p in periods if p.receiving_ac), 0.0)
-    without_power = sum(((p.end - p.start).total_seconds() for p in periods if not p.receiving_ac), 0.0)
+def power_totals(periods: list[PowerPeriod], since: datetime | None = None) -> PowerTotals:
+    """Hours with and without AC power over the periods (only the part after `since`, when given), the current state
+    and when the power last went out, even if that was before `since`."""
+    window = [
+        PowerPeriod(start=max(p.start, since), end=p.end, receiving_ac=p.receiving_ac) if since else p
+        for p in periods
+        if since is None or p.end > since
+    ]
+    with_power = sum(((p.end - p.start).total_seconds() for p in window if p.receiving_ac), 0.0)
+    without_power = sum(((p.end - p.start).total_seconds() for p in window if not p.receiving_ac), 0.0)
     outages = [p for p in periods if not p.receiving_ac]
     return PowerTotals(
-        since=periods[0].start if periods else None,
+        since=window[0].start if window else None,
         with_power_hours=round(with_power / 3600, 3),
         without_power_hours=round(without_power / 3600, 3),
         receiving_ac=periods[-1].receiving_ac if periods else None,

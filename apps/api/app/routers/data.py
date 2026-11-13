@@ -92,14 +92,19 @@ async def list_power_periods(
     "/power-totals",
     response_model=PowerTotalsOut,
     description=(
-        "Hours with and without AC power since the first reading (`since`), filling gaps without readings like "
-        "`/power-periods`; whether AC power is on now, and when the power last went out (`outage_ongoing` while it "
-        "is still out)."
+        "Hours with and without AC power in the last `hours`, or since the first reading when it is left out "
+        "(`since` is where the counted time starts), filling gaps without readings like `/power-periods`; whether AC "
+        "power is on now, and when the power last went out (`outage_ongoing` while it is still out)."
     ),
 )
-async def get_power_totals(session: AsyncSession = Depends(get_session)) -> PowerTotalsOut:
+async def get_power_totals(
+    hours: float | None = Query(None, gt=0, le=168, description="How many hours back to count; all time if left out."),
+    session: AsyncSession = Depends(get_session),
+) -> PowerTotalsOut:
+    # Every reading is read so an outage that started before the window still has its real start
     rows = await summaries.list_ac_states(session, None)
-    totals = power_periods.power_totals(power_periods.find_power_periods((row.date, row.ac) for row in rows))
+    since = datetime.now(timezone.utc) - timedelta(hours=hours) if hours else None
+    totals = power_periods.power_totals(power_periods.find_power_periods((row.date, row.ac) for row in rows), since)
     return PowerTotalsOut(**vars(totals))
 
 
