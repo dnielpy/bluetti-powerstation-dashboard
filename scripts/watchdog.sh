@@ -6,7 +6,7 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-STALE_SECONDS=${WATCHDOG_STALE_SECONDS:-180}
+STALE_SECONDS=${WATCHDOG_STALE_SECONDS:-240}
 COOLDOWN_SECONDS=${WATCHDOG_COOLDOWN_SECONDS:-180}
 # Once every step has been tried (for example the Bluetti is off or out of range), retry less often
 GIVE_UP_COOLDOWN_SECONDS=${WATCHDOG_GIVE_UP_COOLDOWN_SECONDS:-900}

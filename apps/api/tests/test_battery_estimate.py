@@ -174,7 +174,7 @@ def test_estimate_states(row: R, status: str) -> None:
 
 
 def test_estimate_with_old_readings_is_stale() -> None:
-    assert estimate([R(T0, 60, ac_output=40)], NOMINAL, T0 + timedelta(minutes=3), 20).status == "stale"
+    assert estimate([R(T0, 60, ac_output=40)], NOMINAL, T0 + timedelta(minutes=4), 20).status == "stale"
 
 
 def test_estimate_without_readings() -> None:

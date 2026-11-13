@@ -33,7 +33,7 @@ services:
     environment:
       BLUETTI_NAME: ${BLUETTI_NAME:?Set BLUETTI_NAME}
       BLUETTI_ENCRYPTED: ${BLUETTI_ENCRYPTED:-false}
-      SUMMARY_JOB_INTERVAL_SECONDS: ${SUMMARY_JOB_INTERVAL_SECONDS:-7}
+      SUMMARY_JOB_INTERVAL_SECONDS: ${SUMMARY_JOB_INTERVAL_SECONDS:-60}
       # Runtime estimate: nominal capacity (learned from real discharges once there are some) and the level to stop at
       BATTERY_CAPACITY_WH: ${BATTERY_CAPACITY_WH:-1152}
       BATTERY_RESERVE_PERCENT: ${BATTERY_RESERVE_PERCENT:-20}

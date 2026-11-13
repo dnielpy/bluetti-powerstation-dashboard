@@ -8,7 +8,7 @@ from app.models import Summary
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_INTERVAL_SECONDS = 7
+DEFAULT_INTERVAL_SECONDS = 60
 
 
 def get_interval_seconds() -> int:

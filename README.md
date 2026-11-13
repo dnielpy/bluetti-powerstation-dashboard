@@ -93,7 +93,7 @@ To update a running deployment later, run `./scripts/update.sh`: it stops the co
 
 ### Bluetooth watchdog
 
-The Bluetooth connection sometimes hangs: BlueZ stays connected to the Bluetti but no data arrives, so the API stops saving readings. `scripts/watchdog.sh` checks the latest reading every minute and, when it is older than 3 minutes, tries one step at a time, waiting 3 minutes between steps:
+The Bluetooth connection sometimes hangs: BlueZ stays connected to the Bluetti but no data arrives, so the API stops saving readings. `scripts/watchdog.sh` checks the latest reading every minute and, when it is older than 4 minutes, tries one step at a time, waiting 3 minutes between steps:
 
 1. Drop the Bluetti's Bluetooth connection and restart the API.
 2. Restart the Bluetooth service and the API.

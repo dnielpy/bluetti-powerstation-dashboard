@@ -23,7 +23,7 @@ DEFAULT_RESERVE_PERCENT = 20
 HISTORY = timedelta(hours=72)
 RECENT = timedelta(hours=6)
 LOAD_WINDOW = timedelta(seconds=10)
-MAX_READING_AGE = timedelta(seconds=60)
+MAX_READING_AGE = timedelta(minutes=3)
 MAX_READING_GAP = timedelta(minutes=5)
 MAX_STEP = timedelta(hours=6)
 MAX_STEP_PERCENT = 3
