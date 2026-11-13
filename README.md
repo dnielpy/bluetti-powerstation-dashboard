@@ -95,7 +95,7 @@ To update a running deployment later, run `./scripts/update.sh`: it stops the co
 
 The Bluetooth connection sometimes hangs: BlueZ stays connected to the Bluetti but no data arrives, so the API stops saving readings. `scripts/watchdog.sh` checks the latest reading every minute and, when it is older than 4 minutes, tries one step at a time, waiting 3 minutes between steps:
 
-1. Drop the Bluetti's Bluetooth connection and restart the API.
+1. Drop the Bluetti's Bluetooth connection and restart the API. If the disconnect times out, the adapter itself is stuck and only a power cycle helps, so it goes straight to step 3.
 2. Restart the Bluetooth service and the API.
 3. Power cycle the Bluetooth adapter, then restart the Bluetooth service and the API. If readings still don't come back (for example the Bluetti is off), step 3 repeats every 15 minutes.
 

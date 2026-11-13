@@ -26,10 +26,15 @@ log() {
     echo "watchdog: $*"
 }
 
+# Runs a command without stopping on errors, leaving its exit code in last_status
 run() {
     log "  \$ $*"
+    last_status=0
     if [ "$DRY_RUN" != 1 ]; then
-        "$@" || log "  (failed with exit code $?, continuing)"
+        "$@" || last_status=$?
+        if [ "$last_status" != 0 ]; then
+            log "  (failed with exit code $last_status, continuing)"
+        fi
     fi
 }
 
@@ -54,11 +59,16 @@ restart_api() {
     run compose restart api
 }
 
+# Returns 1 without restarting the API when the adapter does not answer the disconnect, since then only step 3 helps
 step_1() {
     log "step 1: drop the Bluetti's Bluetooth connection and restart the API"
     address=$(bluetti_address || true)
     if [ -n "$address" ]; then
         run timeout 15 bluetoothctl disconnect "$address"
+        if [ "$last_status" = 124 ]; then
+            log "the adapter did not answer the disconnect, it is stuck: skipping to step 3"
+            return 1
+        fi
     fi
     restart_api
 }
@@ -121,7 +131,10 @@ fi
 
 next=$(( level < MAX_LEVEL ? level + 1 : MAX_LEVEL ))
 log "no readings for ${age}s (limit ${STALE_SECONDS}s)"
-"step_$next"
+if ! "step_$next"; then
+    next=$MAX_LEVEL
+    "step_$next"
+fi
 
 if [ "$DRY_RUN" != 1 ]; then
     echo "$next" > "$STATE_DIR/level"
