@@ -63,7 +63,7 @@ pnpm dev
 
 ## Production (Docker)
 
-Production runs the API, the web app and Postgres with `docker-compose.prod.yml`. It targets a **Linux host with Bluetooth** (for example a Raspberry Pi) close to the Bluetti: the API container talks to the host's BlueZ daemon through its D-Bus socket. Docker Desktop on macOS cannot reach the Mac's Bluetooth, so the API can't read the Bluetti there.
+Production runs the API and Postgres with `docker-compose.prod.yml`; the pages are served by [Home Server Dashboard](https://github.com/dnielpy/home-server-dashboard) (Energy module), which reads this API. `apps/web` is kept for local development only. It targets a **Linux host with Bluetooth** (for example a Raspberry Pi) close to the Bluetti: the API container talks to the host's BlueZ daemon through its D-Bus socket. Docker Desktop on macOS cannot reach the Mac's Bluetooth, so the API can't read the Bluetti there.
 
 On the host:
 
@@ -82,11 +82,10 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 To update a running deployment later, run `./scripts/update.sh`: it stops the containers, runs `git pull` and builds and starts them again, waiting until they are healthy. The database volume is kept.
 
-- Web: http://HOST:3000 · API: http://HOST:3001 (ports set by `WEB_PORT` / `API_PORT`)
+- API: http://HOST:3001 (port set by `API_PORT`)
 - Postgres is not published outside the Docker network.
-- Dates rendered by the web server use `TZ` (default `America/Havana`); set it to your timezone.
 - The API container runs as `APP_UID` (a user that exists on the host) and without Docker's default AppArmor profile: otherwise D-Bus rejects its connection to BlueZ.
-- `GET /battery-estimate` tells when the battery reaches `BATTERY_RESERVE_PERCENT` (default 20 %) at the current load, the average of the last 10 seconds. It learns how fast the battery really drains from every 1 % step of the last 72 hours of discharge (a line drain = a × load + b, so inverter losses and idle draw are included), starting from `BATTERY_CAPACITY_WH` (default 1152, the AC180) while there is no history. The stats page shows it under the battery level and recalculates it every 30 seconds.
+- `GET /battery-estimate` tells when the battery reaches `BATTERY_RESERVE_PERCENT` (default 20 %) at the current load, the average of the last 10 seconds. It learns how fast the battery really drains from every 1 % step of the last 72 hours of discharge (a line drain = a × load + b, so inverter losses and idle draw are included), starting from `BATTERY_CAPACITY_WH` (default 1152, the AC180) while there is no history. The Energy · Battery page of Home Server Dashboard shows it and recalculates it every 30 seconds.
 - The API applies migrations on startup and runs with a single worker, so the summary job runs once.
 - Containers restart automatically, have health checks and rotate their logs (3 × 10 MB).
 - Build the images on the host itself (or with `docker buildx --platform linux/arm64` for a Raspberry Pi).
